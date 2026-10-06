@@ -30,8 +30,30 @@ const qInt = (v, d, min, max) => { if (v == null) return d; const n = Number(v);
 export async function handleAgentApi(req, res, config, services) {
   const url = new URL(req.url, 'http://x'), path = url.pathname, q = url.searchParams;
   const m = req.method;
-  const isAgentApi = /^\/api\/(agents|tasks|agent-os|demo\/tasks)(\/|$)/.test(path);
+  const isAgentApi = /^\/api\/(agents|tasks|agent-os|supervisor|demo\/tasks|demo\/supervisor)(\/|$)/.test(path);
   if (!isAgentApi) return false;
+  const sup = services.supervisor;
+  if (/^\/api\/(supervisor|demo\/supervisor)(\/|$)/.test(path)) {
+    if (!sup) { err(res, 503, 'supervisor_unavailable', 'Supervisor is not running'); return true; }
+    try {
+      if (m === 'GET' && path === '/api/supervisor/status') { const st = sup.status(); delete st.instanceId; return send(res, 200, { supervisor: st }), true; }
+      if (m === 'GET' && path === '/api/supervisor/decisions') {
+        const kind = q.get('kind'); if (kind && !/^[a-z][a-z0-9_.]{0,63}$/.test(kind)) throw new ValidationError('invalid kind');
+        const since = q.get('since'); if (since && Number.isNaN(Date.parse(since))) throw new ValidationError('invalid since');
+        return send(res, 200, { decisions: sup.decisions({ limit: qInt(q.get('limit'), 50, 1, 200), kind, sinceTs: since }) }), true;
+      }
+      if (m === 'POST' && (path === '/api/demo/supervisor/pause' || path === '/api/demo/supervisor/resume')) {
+        if (config.env === 'production') return err(res, 403, 'forbidden', 'demo controls are disabled in production'), true;
+        if (path.endsWith('pause')) sup.pause(); else sup.resume();
+        return send(res, 200, { state: sup.state }), true;
+      }
+      return err(res, m === 'GET' || m === 'POST' ? 404 : 405, 'not_found', 'unknown endpoint'), true;
+    } catch (e) {
+      if (e instanceof ValidationError) return err(res, 400, 'validation', e.message), true;
+      if (e instanceof InvalidTransitionError) return err(res, 409, 'invalid_transition', e.message), true;
+      console.error(JSON.stringify({ level: 'error', msg: 'api_error', error: String(e.message).slice(0, 200) })); return err(res, 500, 'internal', 'internal error'), true;
+    }
+  }
   const os = services.agentOS;
   if (!os) { err(res, 503, 'agent_os_unavailable', 'Agent OS is not running (database not ready)'); return true; }
   try {

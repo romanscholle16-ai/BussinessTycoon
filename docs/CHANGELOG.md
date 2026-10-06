@@ -20,3 +20,8 @@
 - Migration 0003 (agents/tasks rebuilt, agent_progress_events); migration runner FK directive.
 - API: agents, tasks, agent-os status, demo task create/cancel. Server starts the Agent OS and shuts it down gracefully.
 - Tests: tests/agents.test.js (19 tests).
+
+## Phase 4 — Supervisor
+- `server/src/supervisor/`: lifecycle, single-instance lock, control loop, observation, deterministic scheduling policy with aging/fairness, limits, recovery, decisions, checkpoints. Agent OS extended with targeted dispatch. Phase 3 fixes: clock-based `created_at`, abort-reason classification.
+- API: `/api/supervisor/status`, `/decisions`, demo pause/resume. Server starts/stops the Supervisor. Iso Command Hub HQ panel shows live Supervisor status and recent decisions (minimal change).
+- Tests: tests/supervisor.test.js (20 tests). No migration.

@@ -26,5 +26,22 @@
     "pollMs": 500,
     "leaseMs": 60000,
     "stopGraceMs": 2000
+  },
+  "supervisor": {
+    "enabled": true,
+    "autoStart": true,
+    "pollMs": 1000,
+    "limits": {
+      "maxConcurrentTasks": 3,
+      "maxDispatchPerCycle": 5,
+      "maxTasksPerAgent": 1,
+      "maxRetryDispatchPerCycle": 2,
+      "maxEstimatedCostPerCycleMinor": null
+    },
+    "scheduling": {
+      "agingStepMs": 60000,
+      "maxAgingBoost": 10,
+      "maxCandidates": 100
+    }
   }
 }

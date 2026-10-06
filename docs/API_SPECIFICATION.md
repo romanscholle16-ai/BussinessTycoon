@@ -32,3 +32,12 @@ Selected by config + Supervisor; failover chain; cost reported per call to finan
 | `POST /api/demo/tasks/:id/cancel` | cancel a **demo** task only (403 for others; 409 if already final) |
 
 Errors: 400 `validation`, 403 `forbidden`, 404 `not_found`, 409 `invalid_transition`, 500 `internal` (no details). No credentials or file paths are ever returned. There are no endpoints that publish, spend, create agents, or touch the Supervisor.
+
+## Phase 4 additions (Supervisor)
+`/api/health` reports `phase: 4`. If no Supervisor is running: `503 {"error":"supervisor_unavailable"}`.
+| Method & path | Purpose |
+|---|---|
+| `GET /api/supervisor/status` | `{supervisor:{state, runId, cycle, lastCycle{seq,dispatched,recovered,skipped,limits,at,ok,queue}, counters, inFlight, activeLimits, previousRun{runId,interrupted,lastCycleAt,lastCycleSeq}, config{pollMs,limits,scheduling,recovery}, startedAt}}` (no instance id, paths or secrets) |
+| `GET /api/supervisor/decisions?limit=&kind=&since=` | newest-first decisions/lifecycle events: `{id, ts, kind, severity, result, businessId, agentId, taskId, details}`; `limit` 1–200 (default 50), `kind` like `task.dispatched`, `since` ISO date; bad values → 400 |
+| `POST /api/demo/supervisor/pause` · `/resume` | development controls; 409 on an invalid transition; **403 in production** |
+No endpoint can dispatch, assign, recover, or change limits directly; clients cannot bypass Agent OS permissions.

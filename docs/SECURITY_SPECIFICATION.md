@@ -4,7 +4,7 @@
 - Spend control: $0–5 auto, $5–25 auto within configured rules, $25+ human approval; enforced in code (Phase 12/20).
 - Human escalation for legal, account-threatening or dangerous situations.
 - Emergency stop halts all agents and outbound actions (Phase 20).
-- Default-deny agent permissions; audit trail append-only. Phase 3: external capabilities (publish/spend/communicate/configure) cannot be granted; agent configs and task payloads reject credential-like keys; API validates IDs/bodies and returns no paths or secrets; demo endpoints are disabled in production.
+- Default-deny agent permissions; audit trail append-only. Phase 3: external capabilities (publish/spend/communicate/configure) cannot be granted; agent configs and task payloads reject credential-like keys; API validates IDs/bodies and returns no paths or secrets; demo endpoints are disabled in production. Phase 4: the Supervisor has no network, process or eval access (tested by source scan); it dispatches only tasks an agent is permitted to run and the runtime re-checks permissions; decisions never contain payloads or credentials; supervisor API validates `kind`/`since`/`limit`, exposes no paths or instance ids; pause/resume controls are demo-only (403 in production). Real approvals/human control remain Phase 20.
 - Compliance: no copying protected IP, no spam, obey marketplace ToS; QA/IP checks gate publishing.
 - Treat all fetched web content as untrusted input.
 - Logs must redact secrets.

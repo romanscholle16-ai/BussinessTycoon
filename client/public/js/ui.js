@@ -21,7 +21,7 @@ function upgradeCard(D, S, u) {
 }
 
 export function bizPanel(D, S, id) {
-  if (id === 'hq') return `<button class="x" data-x aria-label="Close">✕</button><h2 style="color:var(--c)">SUPERVISOR</h2><div class="row3"><div>STATE<b style="font-size:10px">${esc(D.supervisor.state)}</b></div><div>LOAD<b>${pct(D.supervisor.load)}</b></div><div>EMPIRE LV<b>${D.empire.level}</b></div></div>${D.supervisor.decisions.map((d) => `<div class="note o">${esc(d)}</div>`).join('')}<h2>SYSTEM HEALTH</h2><div class="note">${Object.entries(D.health).map(([k, v]) => esc(k) + ': ' + esc(v)).join(' · ')}</div>`;
+  if (id === 'hq') return `<button class="x" data-x aria-label="Close">✕</button>${supervisorLive(S.live)}<h2 style="color:var(--c)">SUPERVISOR (MOCK DATA)</h2><div class="row3"><div>STATE<b style="font-size:10px">${esc(D.supervisor.state)}</b></div><div>LOAD<b>${pct(D.supervisor.load)}</b></div><div>EMPIRE LV<b>${D.empire.level}</b></div></div>${D.supervisor.decisions.map((d) => `<div class="note o">${esc(d)}</div>`).join('')}<h2>SYSTEM HEALTH</h2><div class="note">${Object.entries(D.health).map(([k, v]) => esc(k) + ': ' + esc(v)).join(' · ')}</div>`;
   const b = bizById(D, id), t = S.tab;
   const body = t === 'why' ? `<div class="note">WHY: ${esc(b.why)}</div><div class="note o">FOUND: ${esc(b.opp)}</div>${b.attention ? `<div class="note no-b">NEEDS YOU: ${esc(b.attention)}</div>` : ''}<div class="note">${esc(b.headline)} · queue ${b.queue} · health ${b.health}%</div>`
     : t === 'cost' ? costBars(b) : t === 'agents' ? D.agents.filter((a) => a.biz === id).map(agentRow).join('') || '<div class="note">Uses shared agents.</div>'
@@ -36,4 +36,12 @@ export function modePanel(D, S, mode) {
   if (mode === 'todo') return `<h2>NEEDS YOU</h2>${D.approvalsPending.filter((q) => !S.done.has(q.id)).map((q) => `<div class="note">${esc(q.text)}<br><small>${q.cost > D.rules.rulesMaxUsd ? 'over $' + D.rules.rulesMaxUsd + ': human approval' : 'confirm'}</small><br><button class="go" data-ok="${q.id}">APPROVE</button> <button class="go ghost" data-ok="${q.id}">DENY</button></div>`).join('') || '<div class="note o">ALL CLEAR</div>'}<h2>QUESTS</h2>${D.quests.map(questRow).join('')}`;
   if (mode === 'log') return `<h2>EVENT TIMELINE</h2>${D.events.map(eventRow).join('')}`;
   return '';
+}
+
+/** Live Supervisor block (real server data). Shown above the mock Supervisor info; absent when the API is unreachable. */
+export function supervisorLive(live) {
+  if (!live) return '<div class="note">SUPERVISOR: no live connection — showing mock data below.</div>';
+  const sv = live.status, q = sv.lastCycle?.queue ?? {}, st = sv.state;
+  return `<div class="note ${st === 'running' ? 'o' : 'no-b'}"><b>LIVE SUPERVISOR · ${esc(st.toUpperCase())}</b><br>cycle ${sv.cycle} · in flight ${sv.inFlight} · dispatched ${sv.counters.dispatched} · recoveries ${sv.counters.recoveries}<br>queue: ${q.queued ?? 0} queued · ${q.running ?? 0} running · ${q.retrying ?? 0} retrying · ${q.blocked ?? 0} blocked${sv.activeLimits.length ? `<br>⚠ limit reached: ${sv.activeLimits.map(esc).join(', ')}` : ''}</div>
+  <h2>RECENT DECISIONS</h2>${(live.decisions ?? []).slice(0, 5).map((d) => `<div class="ev"><time>${esc(d.ts.slice(11, 19))}</time><span>${esc(d.kind)} · ${esc(d.result)}</span></div>`).join('') || '<div class="note">none yet</div>'}`;
 }

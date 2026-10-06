@@ -25,10 +25,11 @@ export class TaskQueue {
     const priority = assertInt(input.priority ?? 5, 'priority', 0, 10), maxRetries = assertInt(input.maxRetries ?? 3, 'maxRetries', 0, 10);
     const timeoutMs = input.timeoutMs == null ? null : assertInt(input.timeoutMs, 'timeoutMs', 1, 3600000);
     const payload = input.payload ?? {}, metadata = input.metadata ?? {};
-    assertNoSecrets(payload, 'payload'); assertNoSecrets(metadata, 'metadata'); assertJsonSize(payload, 'payload'); assertJsonSize(metadata, 'metadata');
+    assertNoSecrets(payload, 'payload'); assertNoSecrets(metadata, 'metadata');
+    if (metadata.estimatedCostMinor !== undefined) assertInt(metadata.estimatedCostMinor, 'metadata.estimatedCostMinor', 0, 1e9); assertJsonSize(payload, 'payload'); assertJsonSize(metadata, 'metadata');
     if (input.deadlineAt != null && Number.isNaN(Date.parse(input.deadlineAt))) throw new ValidationError('deadlineAt must be an ISO date', 'deadlineAt');
     return this.db.transaction(() => {
-      const row = this.repos.tasks.insert({ id, business_id: input.businessId ?? null, agent_id: input.agentId ?? null, parent_task_id: input.parentTaskId ?? null, correlation_id: input.correlationId ?? null, type: input.type, status: 'pending', priority, payload, metadata, max_retries: maxRetries, timeout_ms: timeoutMs, deadline_at: input.deadlineAt ?? null, data_mode: input.dataMode ?? 'live' });
+      const row = this.repos.tasks.insert({ id, business_id: input.businessId ?? null, agent_id: input.agentId ?? null, parent_task_id: input.parentTaskId ?? null, correlation_id: input.correlationId ?? null, type: input.type, status: 'pending', created_at: this.iso(), priority, payload, metadata, max_retries: maxRetries, timeout_ms: timeoutMs, deadline_at: input.deadlineAt ?? null, data_mode: input.dataMode ?? 'live' });
       this.#event(row, 'task.pending', 'create', { from: null, to: 'pending' });
       return row;
     });
@@ -60,7 +61,10 @@ export class TaskQueue {
    * Eligible: status queued, not waiting on a retry delay, type in agent.config.taskTypes, business matches
    * (shared agents match any), and (unassigned or pre-assigned to this agent). Order: priority (0 first), then oldest.
    */
-  claim(agent) {
+  claim(agent) { return this.#claim(agent, null); }
+  /** Supervisor dispatch: atomically assigns THIS task to THIS agent if (and only if) it is still queued and eligible for the agent. */
+  claimTask(taskId, agent) { assertId(taskId, 'taskId'); return this.#claim(agent, taskId); }
+  #claim(agent, onlyTaskId) {
     const types = agent.config?.taskTypes ?? []; if (!types.length) return null;
     const now = this.iso();
     return this.db.transaction(() => {
@@ -69,7 +73,8 @@ export class TaskQueue {
            AND type IN (${types.map(() => '?').join(',')})
            AND (agent_id IS NULL OR agent_id = ?)
            AND (? IS NULL OR business_id IS NULL OR business_id = ?)
-         ORDER BY priority ASC, created_at ASC, id ASC LIMIT 1`, [now, ...types, agent.id, agent.business_id, agent.business_id]);
+           ${onlyTaskId ? 'AND id = ?' : ''}
+         ORDER BY priority ASC, created_at ASC, id ASC LIMIT 1`, [now, ...types, agent.id, agent.business_id, agent.business_id, ...(onlyTaskId ? [onlyTaskId] : [])]);
       if (!cand) return null;
       return this.transition(cand.id, 'assigned', { expect: 'queued', reason: `claimed by ${agent.id}`, patch: { agent_id: agent.id, claimed_at: now, lease_expires_at: this.iso(this.leaseMs) } });
     });

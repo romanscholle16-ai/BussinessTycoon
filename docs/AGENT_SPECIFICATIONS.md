@@ -73,3 +73,48 @@ Research (etsy), Analytics (shared), Creation (assets), QA (etsy), Publishing (a
 
 ## Deferred (not in Phase 3)
 Supervisor scheduling/allocation/budgets, automatic stale-agent recovery, agent creation/evaluation/promotion, real handlers/providers, multi-task concurrency per agent, real progression balancing.
+
+---
+# IMPLEMENTED IN PHASE 4 — Supervisor
+
+The Supervisor (`server/src/supervisor/`) is the control brain **on top of** the Agent OS: `Supervisor → Agent OS → Agents → Tasks → Handlers`. It observes, plans, dispatches *through* `os.dispatch()`, recovers, and records decisions. It never runs handlers, never talks to the outside world, and cannot bypass agent permissions (it only dispatches tasks an agent is allowed to run, and the runtime re-checks). It is generic: no business-specific logic.
+
+## Modules
+`supervisor.js` lifecycle + control loop + recovery + decisions + checkpoints · `policy.js` pure scheduling policy · `observe.js` snapshot · `store.js` persisted state + single-instance lock (on `checkpoints`) · `states.js` lifecycle table · `config.js` limits/defaults.
+Agent OS extensions made for it (no duplicated queue logic): `queue.claimTask(taskId, agent)`, `runtime.dispatch(taskId)`, `os.dispatch(taskId, agentId)`, `os.maintain()`, `os.startHeartbeats()`, `os.isInflight()`. Two Phase 3 fixes: queue timestamps (`created_at`) now come from the injected clock, and abort reasons carrying a known code (`timeout`, `cancelled`, `shutdown`, `agent_failed`, `agent_stale`) keep their classification (a timeout is retryable; a cancel is not counted as a failure).
+
+## Lifecycle
+`stopped → starting → running ⇄ paused`; `running/paused → stopping → stopped`; `starting/running/paused/stopping → failed`; `failed → starting | stopped`. Invalid moves throw. Each change is a `supervisor.lifecycle` event and is checkpointed. **Single instance:** `start()` takes a lock stored in `checkpoints('supervisor','lock')` inside a `BEGIN IMMEDIATE` transaction; it is refused (`SupervisorLockError`, state stays unchanged) while another instance holds it, its process run is still `running` and its lease (`lockTtlMs`, renewed every cycle) is fresh. A lock left by a crashed/finished process run, or an expired lease, is taken over; the displaced instance fails safely on its next cycle (`lock_lost`).
+
+## Control loop (`cycle()`; timer every `pollMs`, default 1 s; unref'd; stops cleanly)
+1. renew lock → 2. promote due retries, cancel expired deadlines → 3. **observe** → 4. **recover** (re-observe if anything changed) → 5. **plan** (pure) → 6. **dispatch** via Agent OS (not awaited: tasks run concurrently, bounded by limits) → 7. record decisions → 8. checkpoint. Overlapping cycles are refused (`busy`). Three consecutive cycle exceptions (configurable) move the Supervisor to `failed` and release the lock. A paused Supervisor does not dispatch or recover; running tasks continue.
+
+## Observation snapshot
+Agents (status, health, heartbeat, current task, capabilities, businesses, task types, recent failures, availability, stale flag), candidate tasks (queued and past any retry delay; two bounded reads — by priority and by age, `maxCandidates` each — so old work stays visible), active tasks, in-flight ids, queue counts, and stale/expired/orphaned/timed-out lists. Estimated cost comes only from `task.metadata.estimatedCostMinor` when present; nothing financial is invented.
+
+## Scheduling policy (deterministic, documented in `policy.js`)
+Eligible = queued, retry delay elapsed, an agent exists that is allowed to run it (task type, business, allow-list, capability, handler registered). Order, left to right: **(1) effective priority** = max(0, priority − aging boost), boost = min(`maxAgingBoost`, ⌊waited / `agingStepMs`⌋) (defaults: 60 s per level, up to 10 levels — so a long-waiting low-priority task eventually competes as priority 0, then wins by age: **starvation protection**); **(2) deadline** earlier first (none last); **(3) business load** fewer active/planned tasks first (**fairness**); **(4) age** older first (retried tasks wait from `next_attempt_at`); **(5) task id**. Agent for the chosen task: specialist (agent business = task business) before shared, then least-recently-active, then agent id. No revenue/ROI input (that is Phase 16).
+
+## Limits (`config.supervisor.limits`)
+`maxConcurrentTasks` (3), `maxDispatchPerCycle` (5), `maxTasksPerAgent` (fixed 1), `maxRetryDispatchPerCycle` (2; only retried tasks are capped, other work still flows), `maxEstimatedCostPerCycleMinor` (null = off; tasks without an estimate count 0). A limit that blocks work records one `limit.reached` decision when it starts blocking (edge-triggered) and dispatch stops/continues accordingly. No money moves.
+
+## Recovery (non-destructive, bounded; infrastructure recovery never consumes a retry)
+| Condition | Action | Decision |
+|---|---|---|
+| assigned task, lease expired | `release` → queued | `recovery.lease_released` |
+| task `running` with no live executor (e.g. process died) | `release` → queued | `recovery.task_interrupted` |
+| task past its timeout with a live executor | abort → runtime fails it with retryable `timeout` (consumes a retry, as in Phase 3) | `recovery.task_timeout` |
+| agent stale (no heartbeat) | graceful stop (its task is released) + restart | `recovery.agent_restarted` |
+| agent `failed` | `failed → stopped → ready` | `recovery.agent_restarted` |
+| agent `stopped` and compatible queued work exists | start | `recovery.agent_restarted` |
+| more than `maxAgentRecoveries` (3) per `windowMs` (10 min) for one agent | mark `failed`, **escalate**, stop trying | `recovery.refused` (error, once) |
+Never: delete anything, retry a terminal `failed` task, restart `paused`/`retired` agents. Retryable failures follow the Phase 3 `retrying` backoff; the Supervisor only promotes them when due and dispatches them within the retry cap.
+
+## Decisions
+Appended to `events` (`type='supervisor.decision'`, lifecycle changes `type='supervisor.lifecycle'`), with task/agent/business ids and metadata (rank, reason, run id, cycle). Recorded only for meaningful actions: `task.dispatched` (with rank/agent choice), `task.skipped` (no compatible agent; once per task, persisted across restarts), `limit.reached`, `recovery.*`, `dispatch.failed/skipped`, `cycle.failed`, `supervisor.started/resumed_after_interruption/paused/resumed/stopped/failed`. Idle cycles write nothing.
+
+## Checkpoint (`checkpoints('supervisor','state')`)
+Run id, state, last cycle seq/time/ok, counters, recovery attempt history, last 200 dedupe keys, config snapshot, `cleanShutdown`. Written on lifecycle changes, after cycles that acted, and at most every `checkpointIntervalMs` (5 s) otherwise. On start, `cleanShutdown=false` with an active state ⇒ the previous run was interrupted: a `supervisor.resumed_after_interruption` decision is recorded, the sequence/recovery history/dedupe set resume, and the normal recovery rules requeue anything the dead process left half-done.
+
+## Not in Phase 4
+Approvals/human control (Phase 20), budgets in money (Phase 12), ROI-based allocation (Phase 16), agent creation (Phase 18), multi-process scheduling, per-business quotas, automatic failing of permanently unservable tasks.

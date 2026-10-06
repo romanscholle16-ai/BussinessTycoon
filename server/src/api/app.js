@@ -32,7 +32,7 @@ export function createApp(config, services = {}) {
       res.writeHead(200, { 'content-type': 'application/json' });
       // status = the HTTP server; database.status = storage (ok | unavailable | migration_required | migration_failed | not_configured)
       const database = services.database ? services.database.health() : { status: 'not_configured' };
-      res.end(JSON.stringify({ status: 'ok', phase: 3, env: config.env, database }));
+      res.end(JSON.stringify({ status: 'ok', phase: 4, env: config.env, database }));
       return;
     }
     if (req.url.startsWith('/api/') && (await handleAgentApi(req, res, config, services))) return;

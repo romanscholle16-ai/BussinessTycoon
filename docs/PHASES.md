@@ -27,7 +27,7 @@ Status vocabulary: `not started`, `in progress`, `completed`, `blocked`, `deferr
 ## PHASE 4 — Supervisor
 - Scope: Scheduler, task allocation, priorities, budgets, escalation (no agent creation yet).
 - Acceptance: Supervisor schedules and recovers stub tasks; priority and budget rules enforced.
-- Status: not started
+- Status: completed
 
 ## PHASE 5 — Observability
 - Scope: Structured logs, event timeline, task/agent history, audit trail, health.

@@ -26,3 +26,8 @@
 | D-023 | Iso Command Hub keeps using mock data until Phase 5 (observability API); Phase 3 exposes a read API only | Avoid UI churn; real data needs events/metrics from later phases | accepted |
 | D-024 | Migration runner supports `-- migrate:foreign-keys=off` for table rebuilds | SQLite cannot alter CHECK constraints | accepted |
 | D-025 | XP/reputation rules are deterministic placeholders (XP only on verified completion); balancing in Phase 13 | No fake progression | accepted |
+| D-026 | Supervisor dispatches through `os.dispatch` (CAS claim of a specific task); the Agent OS self-dispatch loop is off when the Supervisor runs | One control brain, no duplicated queue logic | locked |
+| D-027 | Supervisor persistence reuses `checkpoints` + `events` + `process_runs`; single-instance lock is a checkpoint row taken in a BEGIN IMMEDIATE transaction with a lease; no migration | No second persistence mechanism | accepted |
+| D-028 | Scheduling order: aged priority → deadline → business load → age → id; agent: specialist → least recently active → id; aging gives starvation protection | Deterministic, testable, fair | accepted |
+| D-029 | Infrastructure recovery (lease/orphan/stale agent) releases tasks without consuming retries; timeouts of live executors do; terminal failures are never retried; agents get ≤3 automatic restarts per 10 min then are escalated as failed | Matches Phase 3 retry semantics, avoids restart loops | accepted |
+| D-030 | Decisions are edge-triggered/deduplicated (persisted keys); idle cycles write nothing | Avoid event spam | accepted |

@@ -9,7 +9,7 @@ export class AgentRuntime {
   get agent() { return this.os.registry.get(this.id); }
   get #reg() { return this.os.registry; }
 
-  async start() { const a = this.agent; this.#reg.transition(this.id, 'ready', { reason: a.status === 'stopped' ? 'restart' : 'start' }); this.#checkpoint(); return this.agent; }
+  async start() { const a = this.agent; this.#reg.transition(this.id, 'ready', { reason: a.status === 'stopped' ? 'restart' : 'start' }); if (this.os.heartbeatsOn) this.startHeartbeatTimer(); this.#checkpoint(); return this.agent; }
   pause(reason = 'paused') { const r = this.#reg.transition(this.id, 'paused', { reason }); this.#checkpoint(); return r; }
   resume() { const r = this.#reg.transition(this.id, 'ready', { reason: 'resume', extra: {} }); this.#checkpoint(); return r; }
   block(reason) { const r = this.#reg.transition(this.id, 'blocked', { reason }); this.#checkpoint(); return r; }
@@ -43,15 +43,22 @@ export class AgentRuntime {
     this.#reg.setCurrentTask(this.id, null);
   }
 
-  /** Claims and executes at most one task. Returns the final task row, or null when idle. */
+  /** Claims and executes at most one task (Phase 3 self-dispatch). Returns the final task row, or null when idle. */
   async tick() {
     if (this.running) return null;
     const a = this.agent; if (a.status !== 'ready') return null;
     this.heartbeat();
     const task = this.os.queue.claim(a); if (!task) return null;
-    this.running = this.#execute(a, task).finally(() => { this.running = null; });
-    return this.running;
+    return this.#begin(a, task);
   }
+  /** Supervisor dispatch: claim one specific task for this agent and start executing it. Returns {task, done} or null. */
+  dispatch(taskId) {
+    if (this.running) return null;
+    const a = this.agent; if (a.status !== 'ready' || a.current_task_id) return null;
+    const task = this.os.queue.claimTask(taskId, a); if (!task) return null;
+    return { task, done: this.#begin(a, task) };
+  }
+  #begin(a, task) { this.running = this.#execute(a, task).finally(() => { this.running = null; }); return this.running; }
 
   async #execute(agent, task) {
     const os = this.os, reg = this.#reg, q = os.queue;
@@ -78,8 +85,9 @@ export class AgentRuntime {
           final = this.#settle(task.id, () => q.complete(task.id, result));
           if (final?.status === 'completed') { reg.recordOutcome(this.id, { ok: true, execMs: os.clock.now().getTime() - started }); reg.award(this.id, { xp: 10, reputation: 0.1, reason: 'task_completed', taskId: task.id }); }
         } catch (err) {
-          const e = err instanceof TaskError ? err : new TaskError('unhandled_error', err?.message ?? String(err), { retryable: false });
-          if (e.code === 'shutdown' || e.code === 'agent_failed') final = this.#settle(task.id, () => q.release(task.id, e.message));
+          const known = ['timeout', 'cancelled', 'shutdown', 'agent_failed', 'agent_stale'];
+          const e = err instanceof TaskError ? err : known.includes(err?.code) ? new TaskError(err.code, err.message, { retryable: err.code === 'timeout' }) : new TaskError('unhandled_error', err?.message ?? String(err), { retryable: false });
+          if (e.code === 'shutdown' || e.code === 'agent_failed' || e.code === 'agent_stale') final = this.#settle(task.id, () => q.release(task.id, e.message));
           else if (e.code === 'cancelled') final = q.get(task.id);
           else {
             final = this.#settle(task.id, () => q.fail(task.id, { code: e.code, message: e.message, retryable: e.retryable, retry }));

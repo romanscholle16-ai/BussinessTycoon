@@ -5,7 +5,7 @@ import { loadMigrations, migrate, migrationStatus, MigrationError } from './migr
 import { createRepos } from './repos.js';
 import { seedFoundation } from './seed.js';
 
-const APP_VERSION = '0.3.0';
+const APP_VERSION = '0.4.0';
 
 export function createDatabaseService(config, { migrationsDir, path } = {}) {
   const autoMigrate = config.database?.autoMigrate ?? true;

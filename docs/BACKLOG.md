@@ -24,3 +24,8 @@
 - Enable `publish`/`spend`/`communicate`/`configure` capabilities with approvals (Phases 8–12, 20)
 - Agent evaluation/promotion/retirement workflow (Phase 18)
 - Client reads agents/tasks from the API instead of mock data (Phase 5)
+- Per-business quotas / weighted fairness (Phase 16)
+- Fail or escalate permanently unservable tasks after a grace period (Phase 20)
+- Supervisor health surfaced in /api/health (Phase 5)
+- Run handlers in worker threads so stuck handlers can be killed (Phase 19)
+- Adaptive polling interval / event-driven wakeups instead of fixed polling

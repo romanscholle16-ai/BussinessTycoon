@@ -16,5 +16,8 @@ Chosen from ten Design Lab prototypes; no modifications requested. Implemented i
 - **Spend rules in UI**: upgrades show their approval tier ($0–5 auto, $5–25 within rules, $25+ becomes a request in TODO). Rules live in `js/rules.js` (unit-tested).
 - **Principle**: nothing in the UI is a fake reward; progression/quests show their verification source. All current numbers are mock data until Phases 2+ supply real ones.
 
+### Phase 4 addition
+The HQ (Supervisor tower) panel shows a LIVE SUPERVISOR block (state, cycle, in-flight, queue counts, limits, last decisions) from `/api/supervisor/*`, with a clear note when the API is unreachable; everything else is still mock data. The selected design is unchanged.
+
 ### Phase 1 client layout
 `client/public/` — `index.html`, `styles.css`, `manifest.webmanifest`, `sw.js` (app-shell cache; /api never cached), `icons/`, `js/{main,world,camera,ui,rules,util}.js`, `js/data/mock.js` (the only data source; replace in later phases). `lab/` holds the throwaway Design Lab prototypes, kept for reference.

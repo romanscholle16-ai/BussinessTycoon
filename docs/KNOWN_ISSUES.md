@@ -18,3 +18,8 @@
 | KI-016 | UI still on mock data; demo agents/tasks are visible only through the API | Phase 5 |
 | KI-017 | Existing dev databases keep the old Phase 2 mock agents (migrated to the new states); `npm run db:reset` for a clean demo set | dev only |
 | KI-018 | Time-based tests use short real timers (≤ ~100 ms); a heavily loaded machine could make them slow | monitor |
+| KI-019 | Tasks that no agent may run (e.g. needs a disabled capability) stay queued forever (one `task.skipped` decision) until a deadline cancels them | Phase 20 (approvals) |
+| KI-020 | A stale agent running a handler that ignores AbortSignal is abandoned, not killed; its task may run again concurrently with the abandoned handler (demo handlers are abortable) | Phase 19 |
+| KI-021 | Supervisor is single-process; lock lease (15 s) means a hung-but-alive instance is only displaced after the lease expires | by design |
+| KI-022 | Only the HQ panel shows live Supervisor data; the rest of the UI is mock until Phase 5 | Phase 5 |
+| KI-023 | `maxEstimatedCostPerCycleMinor` uses optional task estimates only; there is no real cost accounting yet | Phase 12 |

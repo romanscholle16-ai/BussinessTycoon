@@ -58,3 +58,6 @@ SQLite cannot alter CHECK constraints, so `agents` and `tasks` were rebuilt (dat
 - `tasks`: states `pending, queued, assigned, running, completed, failed, retrying, cancelled, blocked`; new columns `metadata_json`, `timeout_ms`, `deadline_at`, `claimed_at`, `lease_expires_at`; queue index `(status, priority, next_attempt_at, created_at)` and lease index.
 - New table `agent_progress_events` (append-only): XP/reputation deltas with reason, task and `data_mode`.
 - Phase 2 demo seed now registers the five Phase 3 demo agents instead of the twelve mock rows (the client still shows its own mock data).
+
+## Phase 4: no schema change
+The Supervisor reuses existing storage: run state and the single-instance lock in `checkpoints` (scope `supervisor`, keys `state` and `lock`), decisions and lifecycle in append-only `events` (`supervisor.decision` / `supervisor.lifecycle`, indexed by `(type, ts)`), process identity in `process_runs`. The schema stays at version 3 (a test asserts this). Task `metadata.estimatedCostMinor` (validated non-negative integer) is the only cost input.
