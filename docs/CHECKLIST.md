@@ -1,10 +1,10 @@
 # CHECKLIST
 
-`[ ]` not started · `[~]` active/in progress · `[x]` complete. Only the authorized phase may be worked on. Currently authorized: none (Phase 1 is next, awaiting user authorization). Update when a phase is verified and committed.
+`[ ]` not started · `[~]` active/in progress · `[x]` complete. Only the authorized phase may be worked on. Currently authorized: none. Next: PHASE 2 — Database (awaiting user authorization). Update when a phase is verified and committed.
 
 - [x] **PHASE 0 — Foundation & Project Control** — COMPLETE
   - Acceptance: Docs complete; smoke test passes; committed.
-- [~] **PHASE 1 — Game Client** — IN PROGRESS (design gate: 5 prototypes ready, awaiting user choice)
+- [x] **PHASE 1 — Game Client** — COMPLETE (design: Iso Command Hub, chosen by user)
   - Acceptance: Runs on Android browser; pan/zoom smooth; installable PWA; no real backend data required.
 - [ ] **PHASE 2 — Database** — Not started
   - Acceptance: Migrations apply cleanly from empty; repository tests pass.

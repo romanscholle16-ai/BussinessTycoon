@@ -17,7 +17,7 @@ database (SQLite) · AI providers · automation (browser/API) · finance · logs
 | Concern | Choice | Status |
 |---|---|---|
 | Runtime | Node.js >= 22 LTS (installed: v22.22.0), ESM JavaScript | in use |
-| Client | Vanilla JS + HTML5 Canvas 2D, PWA (manifest + service worker); no framework unless Phase 1 proves need | Phase 1 |
+| Client | Vanilla ES modules + Canvas 2D isometric hub, PWA (manifest + service worker); no framework, no build step | in use (Phase 1, mock data) |
 | Server/API | Node `http` now; Fastify planned when API grows (Phase 1–2) | minimal in use |
 | Database | SQLite (file in runtime/data) via Node built-in `node:sqlite` or better-sqlite3, decided in Phase 2 | Phase 2 |
 | Migrations | Plain numbered `.sql` files in database/migrations applied by a small runner | Phase 2 |

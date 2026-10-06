@@ -7,3 +7,7 @@
 ## Phase 1 (intermediate) — Design Lab
 - Five prototype UI concepts under client/public/lab (demo data), static serving in server, docs/DESIGN_LAB.md. Design NOT selected.
 - Design Lab round 2: concepts 6–10 (modern cyberpunk workspaces). Design still NOT selected.
+
+## Phase 1 — Game Client (final)
+- Selected design: Iso Command Hub (user choice). Client in client/public (ES modules, Canvas 2D, PWA manifest + service worker, icons), mock data module, spend-rule module, client tests.
+- Fixed `npm test` (Node 22 directory argument).

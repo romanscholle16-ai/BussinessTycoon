@@ -1,6 +1,6 @@
 # DESIGN LAB (Phase 1 design-selection gate)
 
-**Status: AWAITING USER DECISION. No design is selected or locked.**
+**Status: RESOLVED. The user selected concept 9 (Iso Command Hub). See GAME_SPECIFICATION.md. The lab remains in `client/public/lab/` for reference only.**
 
 Ten playable prototypes (round 1: #1–5, round 2 requested by user: #6–10, modern cyberpunk with simple but informative workspace/dashboard) in `client/public/lab/` (served by `npm start` at `http://127.0.0.1:8787/lab/`; for a phone on the LAN set `TYCOON_HOST=0.0.0.0`). All use DEMO DATA (`lab/shared/data.js`), clearly labeled; nothing is real revenue. Prototype code is throwaway-quality and will be replaced once a direction is chosen.
 

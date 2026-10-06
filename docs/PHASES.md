@@ -12,7 +12,7 @@ Status vocabulary: `not started`, `in progress`, `completed`, `blocked`, `deferr
 ## PHASE 1 — Game Client
 - Scope: Responsive PWA: 32-bit futuristic bird's-eye map, pan/zoom/touch, HQ + 4 business buildings (mock data).
 - Acceptance: Runs on Android browser; pan/zoom smooth; installable PWA; no real backend data required.
-- Status: not started
+- Status: completed
 
 ## PHASE 2 — Database
 - Scope: SQLite schema, migrations, repositories for core entities.

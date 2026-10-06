@@ -1,11 +1,12 @@
 {
   "project": "Autonomous Tycoon",
   "currentPhase": 1,
-  "phaseStatus": "in_progress_design_gate",
+  "phaseStatus": "complete",
   "completedPhases": [
-    0
+    0,
+    1
   ],
-  "nextAuthorizedPhase": 1,
+  "nextAuthorizedPhase": 2,
   "phases": [
     {
       "id": 0,
@@ -15,7 +16,7 @@
     {
       "id": 1,
       "name": "Game Client",
-      "status": "in_progress"
+      "status": "complete"
     },
     {
       "id": 2,
@@ -139,14 +140,15 @@
     }
   ],
   "lastValidation": {
-    "command": "node --test tests/smoke.test.js",
-    "result": "pass"
+    "command": "npm test",
+    "result": "pass (9 tests)"
   },
   "lastCommit": "see git log",
   "blocked": [],
   "deferred": [],
   "designGate": {
-    "status": "awaiting_user_choice",
+    "status": "resolved",
+    "selected": "concept 9 Iso Command Hub",
     "prototypes": 10,
     "path": "client/public/lab/"
   }

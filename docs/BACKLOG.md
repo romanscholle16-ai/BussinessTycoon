@@ -7,3 +7,7 @@
 - CI workflow running `npm test` (any time)
 - TypeScript/JSDoc typing decision
 - Backup/restore of runtime/data (Phase 24)
+- Real-time updates over SSE/WebSocket (Phase 5)
+- Building upgrade visuals beyond height (Phase 14)
+- Accessible non-canvas list view of towers for screen readers
+- Remove client/public/lab once no longer needed
