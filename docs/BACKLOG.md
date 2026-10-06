@@ -11,3 +11,9 @@
 - Building upgrade visuals beyond height (Phase 14)
 - Accessible non-canvas list view of towers for screen readers
 - Remove client/public/lab once no longer needed
+- Automated DB backups with retention + restore command + post-backup integrity check (Phase 19/24)
+- Startup integrity check after an unclean shutdown (uses process_runs; Phase 19)
+- Data-retention/archival policy for events and ledger (Phase 24)
+- API endpoints that expose DB state to the client (Phase 5); client switch from mock to API
+- Consider better-sqlite3 if node:sqlite proves unstable
+- Windows validation of WAL/file locking (Phase 22)

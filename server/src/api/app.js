@@ -25,11 +25,13 @@ async function serveStatic(req, res) {
   }
 }
 
-export function createApp(config) {
+export function createApp(config, services = {}) {
   return createServer(async (req, res) => {
     if (req.method === 'GET' && req.url === '/api/health') {
       res.writeHead(200, { 'content-type': 'application/json' });
-      res.end(JSON.stringify({ status: 'ok', phase: 1, env: config.env }));
+      // status = the HTTP server; database.status = storage (ok | unavailable | migration_required | migration_failed | not_configured)
+      const database = services.database ? services.database.health() : { status: 'not_configured' };
+      res.end(JSON.stringify({ status: 'ok', phase: 2, env: config.env, database }));
       return;
     }
     if (req.method === 'GET' && !req.url.startsWith('/api/') && (await serveStatic(req, res))) return;

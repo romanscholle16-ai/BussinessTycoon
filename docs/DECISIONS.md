@@ -15,3 +15,8 @@
 | D-012 | Client is vanilla ES modules + Canvas 2D, no build step, no framework | Zero dependencies; Windows/Android friendly | accepted |
 | D-013 | Client reads a single snapshot object (mock now, API later) | Lets Phase 2+ swap data without UI rewrite | accepted |
 | D-014 | `npm test` uses `tests/*.test.js` glob (Node 22 does not accept a directory argument) | Phase 0 script was broken | accepted |
+| D-015 | SQLite via built-in `node:sqlite`; `engines.node` >= 22.13 | No native build on Windows, zero deps, sufficient features; wrapper isolates it | accepted (supersedes KI-003) |
+| D-016 | DB file must live under runtime/ or outside the repo | Prevent committing data / unsafe config | accepted |
+| D-017 | Every data row carries data_mode demo/test/live; queries choose a mode | Demo data must never read as real results | locked |
+| D-018 | Events and ledger are append-only (triggers); money in integer cents | Auditability, reproducible finance | accepted |
+| D-019 | Auto-migrate on startup (configurable); migrations checksummed, never edited | Safe 24/7 upgrades | accepted |

@@ -17,7 +17,7 @@ Status vocabulary: `not started`, `in progress`, `completed`, `blocked`, `deferr
 ## PHASE 2 — Database
 - Scope: SQLite schema, migrations, repositories for core entities.
 - Acceptance: Migrations apply cleanly from empty; repository tests pass.
-- Status: not started
+- Status: completed
 
 ## PHASE 3 — Agent Operating System
 - Scope: Shared agent runtime: roles, state, permissions, task interface, persistence.

@@ -19,8 +19,8 @@ database (SQLite) · AI providers · automation (browser/API) · finance · logs
 | Runtime | Node.js >= 22 LTS (installed: v22.22.0), ESM JavaScript | in use |
 | Client | Vanilla ES modules + Canvas 2D isometric hub, PWA (manifest + service worker); no framework, no build step | in use (Phase 1, mock data) |
 | Server/API | Node `http` now; Fastify planned when API grows (Phase 1–2) | minimal in use |
-| Database | SQLite (file in runtime/data) via Node built-in `node:sqlite` or better-sqlite3, decided in Phase 2 | Phase 2 |
-| Migrations | Plain numbered `.sql` files in database/migrations applied by a small runner | Phase 2 |
+| Database | SQLite via built-in `node:sqlite` (Node >= 22.13), file `runtime/data/tycoon.sqlite`, WAL, FK on | in use (Phase 2) |
+| Migrations | Numbered `.sql` files in database/migrations, checksummed, transactional (`server/src/db/migrate.js`) | in use (Phase 2) |
 | Testing | `node:test` built-in runner, zero dependencies | in use |
 | Logging | Structured JSON lines to runtime/logs (pino-compatible shape) | Phase 5 |
 | Config | config/default.json < config/<env>.json < config/local.json < TYCOON_* env vars; secrets only via env/.env | in use |
@@ -28,7 +28,7 @@ database (SQLite) · AI providers · automation (browser/API) · finance · logs
 | AI providers | Adapter interface `ProviderAdapter` with capability flags (text, image, vision), failover chain | Phase 6 |
 | Windows service | node-windows or NSSM + scheduled task | Phase 22 |
 
-Phase 0 has ZERO npm dependencies.
+The project still has ZERO npm dependencies. Storage layer: `server/src/db/` (see DATABASE_SPECIFICATION.md); the Phase 1 client still uses mock data and does not read the database yet.
 
 ## Directory layout
 - `server/src/` backend (config, api, core)
