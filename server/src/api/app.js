@@ -3,6 +3,7 @@ import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { resolve, extname, sep } from 'node:path';
 import { ROOT } from '../config/index.js';
+import { handleAgentApi } from './agentRoutes.js';
 
 const PUBLIC_DIR = resolve(ROOT, 'client/public');
 const MIME = {
@@ -31,9 +32,10 @@ export function createApp(config, services = {}) {
       res.writeHead(200, { 'content-type': 'application/json' });
       // status = the HTTP server; database.status = storage (ok | unavailable | migration_required | migration_failed | not_configured)
       const database = services.database ? services.database.health() : { status: 'not_configured' };
-      res.end(JSON.stringify({ status: 'ok', phase: 2, env: config.env, database }));
+      res.end(JSON.stringify({ status: 'ok', phase: 3, env: config.env, database }));
       return;
     }
+    if (req.url.startsWith('/api/') && (await handleAgentApi(req, res, config, services))) return;
     if (req.method === 'GET' && !req.url.startsWith('/api/') && (await serveStatic(req, res))) return;
     res.writeHead(404, { 'content-type': 'application/json' });
     res.end(JSON.stringify({ error: 'not_found' }));

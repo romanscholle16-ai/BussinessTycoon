@@ -20,5 +20,11 @@
   "database": {
     "autoMigrate": true,
     "busyTimeoutMs": 5000
+  },
+  "agentOs": {
+    "autoStart": true,
+    "pollMs": 500,
+    "leaseMs": 60000,
+    "stopGraceMs": 2000
   }
 }

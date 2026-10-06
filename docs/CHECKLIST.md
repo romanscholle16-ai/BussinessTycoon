@@ -1,6 +1,6 @@
 # CHECKLIST
 
-`[ ]` not started · `[~]` active/in progress · `[x]` complete. Only the authorized phase may be worked on. Currently authorized: none. Next: PHASE 3 — Agent Operating System (awaiting user authorization). Update when a phase is verified and committed.
+`[ ]` not started · `[~]` active/in progress · `[x]` complete. Only the authorized phase may be worked on. Currently authorized: none. Next: PHASE 4 — Supervisor (awaiting user authorization). Update when a phase is verified and committed.
 
 - [x] **PHASE 0 — Foundation & Project Control** — COMPLETE
   - Acceptance: Docs complete; smoke test passes; committed.
@@ -8,7 +8,7 @@
   - Acceptance: Runs on Android browser; pan/zoom smooth; installable PWA; no real backend data required.
 - [x] **PHASE 2 — Database** — COMPLETE
   - Acceptance: Migrations apply cleanly from empty; repository tests pass.
-- [ ] **PHASE 3 — Agent Operating System** — Not started
+- [x] **PHASE 3 — Agent Operating System** — COMPLETE
   - Acceptance: Agents register, execute stub tasks, persist state; one OS shared by all businesses.
 - [ ] **PHASE 4 — Supervisor** — Not started
   - Acceptance: Supervisor schedules and recovers stub tasks; priority and budget rules enforced.

@@ -28,7 +28,7 @@ database (SQLite) · AI providers · automation (browser/API) · finance · logs
 | AI providers | Adapter interface `ProviderAdapter` with capability flags (text, image, vision), failover chain | Phase 6 |
 | Windows service | node-windows or NSSM + scheduled task | Phase 22 |
 
-The project still has ZERO npm dependencies. Storage layer: `server/src/db/` (see DATABASE_SPECIFICATION.md); the Phase 1 client still uses mock data and does not read the database yet.
+The project still has ZERO npm dependencies. Agent OS (Phase 3): `server/src/agents/` — one shared runtime (registry, queue, handlers, per-agent runtime) on top of the database; see AGENT_SPECIFICATIONS.md. The Iso Command Hub UI still uses mock data (decision D-023). Storage layer: `server/src/db/` (see DATABASE_SPECIFICATION.md); the Phase 1 client still uses mock data and does not read the database yet.
 
 ## Directory layout
 - `server/src/` backend (config, api, core)

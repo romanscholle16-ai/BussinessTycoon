@@ -44,11 +44,20 @@ export function migrate(db, migrations = loadMigrations()) {
   if (st.problems.length) throw new MigrationError(st.problems[0].code, st.problems[0].message);
   const ran = [];
   for (const m of st._pending) {
+    // `-- migrate:foreign-keys=off` as the first line: FK enforcement is disabled around the file (needed for table rebuilds),
+    // PRAGMA foreign_key_check must come back clean before commit, and enforcement is always re-enabled.
+    const fkOff = /^-- migrate:foreign-keys=off\s*$/m.test(m.sql.split('\n', 1)[0]);
     try {
-      db.transaction(() => { db.exec(m.sql); db.run('INSERT INTO schema_migrations (version, name, checksum) VALUES (?, ?, ?)', [m.version, m.name, m.checksum]); });
+      if (fkOff) db.exec('PRAGMA foreign_keys = OFF');
+      db.transaction(() => {
+        db.exec(m.sql);
+        if (fkOff) { const bad = db.all('PRAGMA foreign_key_check'); if (bad.length) throw new Error(`foreign key violations after rebuild (${bad.length})`); }
+        db.run('INSERT INTO schema_migrations (version, name, checksum) VALUES (?, ?, ?)', [m.version, m.name, m.checksum]);
+      });
     } catch (err) {
       throw new MigrationError('apply_failed', `Migration ${m.file} failed and was rolled back: ${err.message}`);
     }
+    finally { if (fkOff) db.exec('PRAGMA foreign_keys = ON'); }
     ran.push(m.version);
   }
   return { ran, current: ran.length ? ran[ran.length - 1] : st.current };

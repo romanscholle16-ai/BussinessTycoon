@@ -14,3 +14,9 @@
 
 ## Phase 2 — Database & Persistent State
 - node:sqlite storage layer, SQL migrations (0001_core, 0002_finance_progression), repositories, seed strategy (foundation + explicit demo), DB health in /api/health, graceful shutdown, scripts/db.js CLI, tests/db.test.js.
+
+## Phase 3 — Agent Operating System
+- Shared Agent OS (`server/src/agents/`): state machines, registry, persistent queue with safe claiming, retries/timeouts/leases/deadlines, heartbeats/health, capability model, metrics/XP/reputation placeholders, checkpoints, graceful shutdown, boot reconcile, demo agents and handlers.
+- Migration 0003 (agents/tasks rebuilt, agent_progress_events); migration runner FK directive.
+- API: agents, tasks, agent-os status, demo task create/cancel. Server starts the Agent OS and shuts it down gracefully.
+- Tests: tests/agents.test.js (19 tests).

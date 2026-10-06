@@ -16,7 +16,7 @@
 - Applied in order, **each in its own transaction**, recorded in `schema_migrations(version, name, checksum, applied_at)`.
 - Safety: applied migrations are checksummed; editing one → `checksum_mismatch`; database newer than code → `db_newer_than_code`; filename gap/bad name → refused; a failing migration is rolled back fully and reported as `apply_failed`. Never edit an applied migration; add a new one.
 - Startup: server auto-migrates when `database.autoMigrate` is true (default). If false, state is `migration_required`.
-- Do not put `BEGIN/COMMIT` or `PRAGMA foreign_keys` in migration SQL.
+- Do not put `BEGIN/COMMIT` or `PRAGMA foreign_keys` in migration SQL (use the `-- migrate:foreign-keys=off` first-line directive for table rebuilds).
 - CLI: `npm run db:status | db:migrate | db:seed-demo | db:check | db:reset` (`reset` is dev-only and refuses in production).
 
 ## Conventions
@@ -51,3 +51,10 @@ Indexes: task queue `(status, priority, next_attempt_at)`, tasks by business/age
 
 ## Backup / recovery requirements (NOT built yet; see BACKLOG)
 Backup: online-safe copy (`VACUUM INTO` or SQLite backup API) to a timestamped file in a separate location, on a schedule, with retention. Restore: stop app, replace DB (+ discard `-wal/-shm`), run `db:check`, start (migrations auto-apply). Integrity verification after each backup and on startup if the previous run crashed. Corruption recovery: restore latest good backup, replay from checkpoints, record in events. Safe shutdown: SIGINT/SIGTERM close the server then the DB (WAL checkpoint, run marked clean).
+
+## Phase 3 schema changes (migration `0003_agent_os`)
+SQLite cannot alter CHECK constraints, so `agents` and `tasks` were rebuilt (data preserved and states mapped: agents candidate→created, idle→ready, working→running, suspended→paused; tasks waiting_approval→blocked, succeeded→completed). The migration runner now supports a first-line directive `-- migrate:foreign-keys=off`: FK enforcement is disabled around that file only, `PRAGMA foreign_key_check` must be clean before commit, and enforcement is always restored. Tested by upgrading a populated version-2 database.
+- `agents`: states `created, ready, running, paused, blocked, stopping, stopped, failed, retired`; new columns `health_status` (healthy/degraded/stalled/failed/unknown), `permissions_json` ({capabilities, businesses}), `current_task_id`, `last_heartbeat_at`, `last_activity_at`, `last_started_at`, `last_error`.
+- `tasks`: states `pending, queued, assigned, running, completed, failed, retrying, cancelled, blocked`; new columns `metadata_json`, `timeout_ms`, `deadline_at`, `claimed_at`, `lease_expires_at`; queue index `(status, priority, next_attempt_at, created_at)` and lease index.
+- New table `agent_progress_events` (append-only): XP/reputation deltas with reason, task and `data_mode`.
+- Phase 2 demo seed now registers the five Phase 3 demo agents instead of the twelve mock rows (the client still shows its own mock data).

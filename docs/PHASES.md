@@ -22,7 +22,7 @@ Status vocabulary: `not started`, `in progress`, `completed`, `blocked`, `deferr
 ## PHASE 3 — Agent Operating System
 - Scope: Shared agent runtime: roles, state, permissions, task interface, persistence.
 - Acceptance: Agents register, execute stub tasks, persist state; one OS shared by all businesses.
-- Status: not started
+- Status: completed
 
 ## PHASE 4 — Supervisor
 - Scope: Scheduler, task allocation, priorities, budgets, escalation (no agent creation yet).

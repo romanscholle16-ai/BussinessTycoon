@@ -20,3 +20,9 @@
 | D-017 | Every data row carries data_mode demo/test/live; queries choose a mode | Demo data must never read as real results | locked |
 | D-018 | Events and ledger are append-only (triggers); money in integer cents | Auditability, reproducible finance | accepted |
 | D-019 | Auto-migrate on startup (configurable); migrations checksummed, never edited | Safe 24/7 upgrades | accepted |
+| D-020 | One shared Agent OS; business agents are configurations, not separate systems | Maintainability, Supervisor control, consistent metrics/recovery | locked |
+| D-021 | Capabilities with external effects (publish/spend/communicate/configure) exist but cannot be granted until their phases | Safety by construction in Phase 3 | accepted |
+| D-022 | Claims are CAS updates inside BEGIN IMMEDIATE; released (interrupted) tasks do not consume retries; boot reconcile requeues orphaned tasks | No duplicate execution, no lost tasks on a single local server | accepted |
+| D-023 | Iso Command Hub keeps using mock data until Phase 5 (observability API); Phase 3 exposes a read API only | Avoid UI churn; real data needs events/metrics from later phases | accepted |
+| D-024 | Migration runner supports `-- migrate:foreign-keys=off` for table rebuilds | SQLite cannot alter CHECK constraints | accepted |
+| D-025 | XP/reputation rules are deterministic placeholders (XP only on verified completion); balancing in Phase 13 | No fake progression | accepted |

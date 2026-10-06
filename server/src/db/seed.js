@@ -1,6 +1,8 @@
 // Seeding. seedFoundation: structural records every installation needs (idempotent, run at startup).
 // seedDemo: clearly-marked DEMO records, only when explicitly invoked and never in production.
 import { DEMO } from '../../../client/public/js/data/mock.js'; // same demo numbers as the Phase 1 client
+import { AgentRegistry } from '../agents/registry.js';
+import { registerDemoAgents } from '../agents/demo.js';
 
 export const BUSINESSES = [
   { id: 'etsy', name: 'Etsy POD Factory', kind: 'etsy_pod' },
@@ -25,11 +27,7 @@ export function seedDemo(db, repos, { env = 'development' } = {}) {
   return db.transaction(() => {
     seedFoundation(repos);
     const mode = 'demo';
-    for (const a of DEMO.agents) {
-      repos.agents.insert({ id: `demo-${a.id}`, name: `DEMO ${a.name}`, role: a.role, business_id: a.biz === 'shared' ? null : a.biz, status: a.state === 'working' ? 'working' : a.state === 'blocked' ? 'blocked' : 'idle', level: a.lvl, xp: a.xp, health: 100, metrics: { successRate: a.succ, weeklyCostUsd: a.cost }, config: { note: 'demo' }, data_mode: mode });
-      repos.tasks.insert({ id: `demo-t-${a.id}`, business_id: a.biz === 'shared' ? null : a.biz, agent_id: `demo-${a.id}`, type: 'demo.display', status: a.state === 'working' ? 'running' : a.state === 'blocked' ? 'waiting_approval' : 'queued', payload: { description: a.task }, data_mode: mode });
-      repos.progression.upsert('agent', `demo-${a.id}`, mode, { xp: a.xp, level: a.lvl });
-    }
+    registerDemoAgents(new AgentRegistry(db, repos)); // the five Phase 3 demo agents (data_mode='demo')
     DEMO.events.forEach((e, i) => repos.events.insert({ id: `demo-e${i}`, ts: ago(e.t), type: `demo.${e.kind}`, severity: e.kind === 'warn' ? 'warn' : 'info', business_id: e.biz === 'shared' ? null : e.biz, action: e.text, result: 'demo', data_mode: mode }));
     for (const b of DEMO.biz) {
       if (b.rev > 0) repos.ledger.insert({ business_id: b.id, type: 'revenue', category: 'revenue', amount_minor: cents(b.rev), source: 'demo', reference: `demo-rev-${b.id}`, data_mode: mode, metadata: { note: 'DEMO – not real revenue' } });

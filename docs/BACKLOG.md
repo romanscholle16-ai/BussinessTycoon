@@ -17,3 +17,10 @@
 - API endpoints that expose DB state to the client (Phase 5); client switch from mock to API
 - Consider better-sqlite3 if node:sqlite proves unstable
 - Windows validation of WAL/file locking (Phase 22)
+- Supervisor: scheduling, cross-business priorities, budgets, automatic recovery of stale agents (Phase 4, 19)
+- Multi-task concurrency per agent (`maxConcurrentTasks` > 1)
+- Worker threads/child processes for untrusted or long handlers
+- Task dependency graph (parent/child fan-out/fan-in) and per-business rate limits
+- Enable `publish`/`spend`/`communicate`/`configure` capabilities with approvals (Phases 8–12, 20)
+- Agent evaluation/promotion/retirement workflow (Phase 18)
+- Client reads agents/tasks from the API instead of mock data (Phase 5)

@@ -12,3 +12,9 @@
 | KI-010 | No automated backups, restore tooling, or corruption recovery yet | BACKLOG (Phase 19/24) |
 | KI-011 | Demo rows cannot be deleted individually (append-only tables); use `db:reset` in dev | by design |
 | KI-012 | Not tested on Windows (file locking / WAL on network drives untested); keep the data dir on a local disk | verify in Phase 22 |
+| KI-013 | Agent OS runs one task at a time per agent; handlers run in-process (a handler that ignores AbortSignal cannot be killed, only abandoned) | Phase 4/19 |
+| KI-014 | Stale-agent/timeout/lease handling detects and releases tasks but does not restart or replace agents | Phase 4/19 |
+| KI-015 | XP/reputation/level rules are placeholders | Phase 13 |
+| KI-016 | UI still on mock data; demo agents/tasks are visible only through the API | Phase 5 |
+| KI-017 | Existing dev databases keep the old Phase 2 mock agents (migrated to the new states); `npm run db:reset` for a clean demo set | dev only |
+| KI-018 | Time-based tests use short real timers (≤ ~100 ms); a heavily loaded machine could make them slow | monitor |

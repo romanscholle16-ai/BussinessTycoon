@@ -54,8 +54,9 @@ function makeRepo(db, { table, pk = 'id', cols, json = [], updatedAt = false, ge
 export function createRepos(db) {
   const base = ['data_mode'];
   const businesses = makeRepo(db, { table: 'businesses', cols: ['name', 'kind', 'status', 'level', 'config_json', ...base, 'created_at', 'updated_at'], json: ['config'], updatedAt: true, generateId: false });
-  const agents = makeRepo(db, { table: 'agents', cols: ['name', 'role', 'business_id', 'status', 'level', 'xp', 'reputation', 'health', 'metrics_json', 'config_json', ...base, 'created_at', 'updated_at', 'retired_at'], json: ['metrics', 'config'], updatedAt: true });
-  const tasks = makeRepo(db, { table: 'tasks', cols: ['business_id', 'agent_id', 'parent_task_id', 'correlation_id', 'type', 'status', 'priority', 'payload_json', 'result_json', 'retry_count', 'max_retries', 'error_code', 'error_message', 'created_at', 'updated_at', 'started_at', 'completed_at', 'next_attempt_at', ...base], json: ['payload', 'result'], updatedAt: true });
+  const agents = makeRepo(db, { table: 'agents', cols: ['name', 'role', 'business_id', 'status', 'level', 'xp', 'reputation', 'health', 'health_status', 'metrics_json', 'config_json', 'permissions_json', 'current_task_id', 'last_heartbeat_at', 'last_activity_at', 'last_started_at', 'last_error', ...base, 'created_at', 'updated_at', 'retired_at'], json: ['metrics', 'config', 'permissions'], updatedAt: true });
+  const tasks = makeRepo(db, { table: 'tasks', cols: ['business_id', 'agent_id', 'parent_task_id', 'correlation_id', 'type', 'status', 'priority', 'payload_json', 'result_json', 'metadata_json', 'retry_count', 'max_retries', 'timeout_ms', 'error_code', 'error_message', 'created_at', 'updated_at', 'started_at', 'completed_at', 'next_attempt_at', 'deadline_at', 'claimed_at', 'lease_expires_at', ...base], json: ['payload', 'result', 'metadata'], updatedAt: true });
+  const agentProgress = makeRepo(db, { table: 'agent_progress_events', cols: ['ts', 'agent_id', 'kind', 'delta', 'reason', 'task_id', ...base], readOnly: true });
   const events = makeRepo(db, { table: 'events', cols: ['ts', 'type', 'severity', 'business_id', 'agent_id', 'task_id', 'action', 'result', 'cost_minor', 'currency', 'error', 'metadata_json', ...base], json: ['metadata'], readOnly: true });
   const ledger = makeRepo(db, { table: 'ledger_entries', cols: ['ts', 'business_id', 'type', 'category', 'amount_minor', 'currency', 'source', 'reference', 'task_id', 'agent_id', 'metadata_json', ...base], json: ['metadata'], readOnly: true });
   const approvals = makeRepo(db, { table: 'approvals', cols: ['request_type', 'business_id', 'task_id', 'agent_id', 'action', 'amount_minor', 'currency', 'reason', 'expected_benefit', 'risk', 'status', 'expires_at', 'created_at', 'resolved_at', 'resolution', 'resolved_by', ...base] });
@@ -112,5 +113,5 @@ export function createRepos(db) {
     /** Marks earlier runs that never ended as crashed; returns how many (recovery foundation). */
     markCrashed(exceptId) { return db.run("UPDATE process_runs SET status = 'crashed' WHERE status = 'running' AND id <> ?", [exceptId]).changes; },
   };
-  return { businesses, agents, tasks, events, ledger: ledgerApi, approvals: approvalsApi, quests, upgrades, achievements, leaderboard, metrics, systemState, checkpoints, progression, runs };
+  return { businesses, agents, tasks, agentProgress, events, ledger: ledgerApi, approvals: approvalsApi, quests, upgrades, achievements, leaderboard, metrics, systemState, checkpoints, progression, runs };
 }
