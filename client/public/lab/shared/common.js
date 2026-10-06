@@ -21,7 +21,7 @@ function labChip(current) {
   const names = ['Classic Tycoon', 'Command Center', 'Cyber City', 'Minimal Strategy', 'Living Empire'];
   const d = document.createElement('div');
   d.id = 'labchip';
-  d.innerHTML = `<button aria-label="Design lab menu">LAB ${current}▾</button><div class="menu" hidden>${names.map((n, i) => `<a href="../c${i + 1}/" ${i + 1 === current ? 'class="cur"' : ''}>${i + 1}. ${n}</a>`).join('')}<a href="../">◀ Design Lab home</a><small>DEMO DATA – not real money</small></div>`;
+  d.innerHTML = `<button aria-label="Design lab menu">LAB ${current}▾</button><div class="menu" hidden>${names.map((n, i) => `<a href="../c${i + 1}/index.html" ${i + 1 === current ? 'class="cur"' : ''}>${i + 1}. ${n}</a>`).join('')}<a href="../">◀ Design Lab home</a><small>DEMO DATA – not real money</small></div>`;
   document.body.appendChild(d);
   d.querySelector('button').onclick = () => { const m = d.querySelector('.menu'); m.hidden = !m.hidden; };
 }
