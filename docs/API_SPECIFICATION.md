@@ -54,3 +54,7 @@ New endpoints use the envelope `{ok:true, timestamp, data, meta:{phase,…}}`; e
 | `GET /api/errors` | events of severity ≥ error (`includeWarnings=true` adds warnings) with task/agent state, `retryable`, related Supervisor decisions and a plain-language `explanation`; same filters as events |
 | `GET /api/activity` | like events with `minSeverity=info` by default (debug hidden) plus `meta.counts` by severity |
 Responses are sanitized: credential-like keys redacted, file paths and stack traces removed, strings truncated; no endpoint exposes paths, secrets or SQL.
+
+## Phase 6 additions (AI providers)
+`GET /api/ai/providers[?refresh=1]` → `{ok, timestamp, data:{enabled, activeProvider, fallbackProviders, selection, problems[], limits{timeoutMs,maxRetries,maxTotalMs,maxProviderAttempts,maxInputChars,defaultMaxOutputTokens,maxOutputTokens,maxCostPerRequestUsd}, providers:[{name, kind, role(active|fallback|unused), enabled, configured, status, reason, model, models[], capabilities{text,json,temperature}, endpoint(origin only), integration, rateLimitedUntil, retryAt, lastOkAt, lastError{category,at}, stats{requests,ok,failed,avgLatencyMs}, pricing{known,inputPerMTokUsd,outputPerMTokUsd}}]}, meta}`. `refresh=1` runs the bounded local-server probe (Ollama) — the only live check; unknown or repeated parameters → 400; non-GET → 405; no service → 503. Never returns keys, headers, prompts, paths or URLs with credentials. There are no mutation endpoints: configuration comes from `config/` and the environment.
+`/api/health` reports `phase: 6`.

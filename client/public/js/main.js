@@ -52,8 +52,8 @@ const getJson = async (u) => { const r = await fetch(u, { headers: { accept: 'ap
 async function pollLive() {
   if (document.hidden) return;
   try {
-    const [h, a, b] = await Promise.all([getJson('/api/system/health'), getJson('/api/supervisor/status').catch(() => null), getJson('/api/supervisor/decisions?limit=5').catch(() => null)]);
-    S.live = { ...(S.live ?? {}), health: h.data, status: a?.supervisor ?? null, decisions: b?.decisions ?? [] };
+    const [h, a, b, ai] = await Promise.all([getJson('/api/system/health'), getJson('/api/supervisor/status').catch(() => null), getJson('/api/supervisor/decisions?limit=5').catch(() => null), getJson('/api/ai/providers').catch(() => null)]);
+    S.live = { ...(S.live ?? {}), health: h.data, status: a?.supervisor ?? null, decisions: b?.decisions ?? [], ai: ai?.data ?? null };
     if (S.mode === 'log') { const f = S.logFilter, q = new URLSearchParams({ limit: '80', minSeverity: f.sev }); if (f.comp) q.set('component', f.comp); S.live.events = { events: (await getJson('/api/activity?' + q)).data.events }; }
     if (S.mode === 'agents') S.live.agents = (await getJson('/api/agents')).agents;
   } catch { S.live = null; }

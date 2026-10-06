@@ -37,3 +37,12 @@
 | D-034 | No log files: durable history is the events table; process logs are structured JSON on stdout; events are not mirrored to logs | No duplicates, nothing to rotate | accepted |
 | D-035 | New observability endpoints use `{ok,timestamp,data,meta}`; Phase 3/4 endpoints keep their shapes | Do not break consumers | accepted |
 | D-036 | Metrics windows use indexed columns; `until` is inclusive for metrics; list queries default to a 24 h window and cap at 30 days / 200 rows | Bounded cost on long-lived databases | accepted |
+| D-037 | Claude/OpenAI/Ollama adapters use `fetch` over HTTP behind one adapter interface; no SDK dependency (zero-dependency policy; the Claude SDK would be a drop-in replacement inside one file) | Matches project philosophy and the instruction to avoid unnecessary dependencies | accepted |
+| D-038 | Default Claude model `claude-opus-5-5`; built-in prices are dated (2026-09-25) and overridable; unknown price = unknown cost | Never fabricate cost | accepted |
+| D-039 | Provider failover never occurs on safety refusal, invalid request, budget or cancellation; explicit provider requests are never substituted without `allowFallback` | Safety and predictability | locked |
+| D-040 | Cost ceilings fail closed (unknown cost + ceiling = rejected) | Never spend by default | locked |
+| D-041 | New capability `ai` gates AI tasks; never granted to demo agents; mock provider refused in production | Least privilege | accepted |
+| D-042 | One summary event per AI call; fallbacks and problem-state transitions are separate events; prompts/outputs are not stored; no events when AI is disabled | Explainable without flooding | accepted |
+| D-043 | `.env` is loaded (without overriding real env vars) for credentials; config object never contains secrets | Phase 0 `.env.example` existed but nothing read it | accepted |
+| D-044 | Credential-like key detection ignores the plural `tokens` (token counts are not secrets) | `maxTokens`/`inputTokens` are legitimate field names | accepted |
+| D-045 | Freebuff is an adapter boundary only (no invented API) | No stable programmatic API identified | accepted |

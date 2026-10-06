@@ -21,7 +21,7 @@ function upgradeCard(D, S, u) {
 }
 
 export function bizPanel(D, S, id) {
-  if (id === 'hq') return `<button class="x" data-x aria-label="Close">✕</button>${healthBlock(S.live?.health)}${supervisorLive(S.live)}<h2 style="color:var(--c)">SUPERVISOR (MOCK DATA)</h2><div class="row3"><div>STATE<b style="font-size:10px">${esc(D.supervisor.state)}</b></div><div>LOAD<b>${pct(D.supervisor.load)}</b></div><div>EMPIRE LV<b>${D.empire.level}</b></div></div>${D.supervisor.decisions.map((d) => `<div class="note o">${esc(d)}</div>`).join('')}<h2>SYSTEM HEALTH (MOCK DATA)</h2><div class="note">${Object.entries(D.health).map(([k, v]) => esc(k) + ': ' + esc(v)).join(' · ')}</div>`;
+  if (id === 'hq') return `<button class="x" data-x aria-label="Close">✕</button>${healthBlock(S.live?.health)}${supervisorLive(S.live)}${aiBlock(S.live?.ai)}<h2 style="color:var(--c)">SUPERVISOR (MOCK DATA)</h2><div class="row3"><div>STATE<b style="font-size:10px">${esc(D.supervisor.state)}</b></div><div>LOAD<b>${pct(D.supervisor.load)}</b></div><div>EMPIRE LV<b>${D.empire.level}</b></div></div>${D.supervisor.decisions.map((d) => `<div class="note o">${esc(d)}</div>`).join('')}<h2>SYSTEM HEALTH (MOCK DATA)</h2><div class="note">${Object.entries(D.health).map(([k, v]) => esc(k) + ': ' + esc(v)).join(' · ')}</div>`;
   const b = bizById(D, id), t = S.tab;
   const body = t === 'why' ? `<div class="note">WHY: ${esc(b.why)}</div><div class="note o">FOUND: ${esc(b.opp)}</div>${b.attention ? `<div class="note no-b">NEEDS YOU: ${esc(b.attention)}</div>` : ''}<div class="note">${esc(b.headline)} · queue ${b.queue} · health ${b.health}%</div>`
     : t === 'cost' ? costBars(b) : t === 'agents' ? D.agents.filter((a) => a.biz === id).map(agentRow).join('') || '<div class="note">Uses shared agents.</div>'
@@ -80,4 +80,12 @@ export function agentsLive(D, S) {
   if (!live) return `<div class="note">No live connection — showing MOCK agents.</div>${D.agents.map(agentRow).join('')}`;
   if (!live.length) return '<div class="note">No agents are registered yet.</div>';
   return live.map((a) => `<div class="agent st-${esc(a.status)}"><b class="name">${esc(a.name)}</b> <span class="hbadge ${STATUS_CLASS[a.healthStatus === 'stalled' || a.healthStatus === 'failed' ? (a.healthStatus === 'failed' ? 'critical' : 'degraded') : a.healthStatus === 'degraded' ? 'degraded' : a.healthStatus === 'healthy' ? 'healthy' : 'unknown']}">${esc(a.healthStatus)}</span><span class="meta">${esc(a.role)} · ${esc(a.status)} · L${a.level} · ${a.metrics.successRate == null ? 'no results yet' : Math.round(a.metrics.successRate * 100) + '% ok'} · beat ${esc(ago(a.lastHeartbeatAt))}</span><span class="task">${a.currentTaskId ? 'working: ' + esc(a.currentTaskId.slice(0, 8)) : 'idle'}${a.dataMode !== 'live' ? ' · ' + esc(a.dataMode.toUpperCase()) : ''}</span></div>`).join('');
+}
+
+/** AI provider status (operational only: no AI activity is shown unless it really happened). */
+export function aiBlock(ai) {
+  if (!ai) return '<div class="note">AI: status unavailable (no live connection).</div>';
+  if (!ai.enabled) return `<div class="note"><b>AI · DISABLED</b><br>No provider is active (AI_ACTIVE_PROVIDER=none). Nothing is sent to any AI service.${ai.problems?.length ? '<br>⚠ ' + esc(ai.problems[0]) : ''}</div>`;
+  const rows = ai.providers.filter((p) => p.role !== 'unused').map((p) => `<div class="ev ${['misconfigured', 'unavailable', 'temporarily_failed', 'rate_limited'].includes(p.status) ? 'sev-warning' : ''}"><time>${esc(p.role)}</time><span><b>${esc(p.name)}</b> · ${esc(p.status.replace('_', ' '))}${p.model ? ' · ' + esc(p.model) : ''}<small>${p.reason ? esc(p.reason) + ' · ' : ''}${p.pricing.known ? 'price known' : 'price unknown'}${p.lastError ? ' · last error ' + esc(p.lastError.category) : ''}${p.rateLimitedUntil ? ' · limited until ' + esc(p.rateLimitedUntil.slice(11, 19)) : ''}</small></span></div>`).join('');
+  return `<div class="note o"><b>AI · ENABLED</b><br>active: ${esc(ai.activeProvider)} · fallback: ${ai.fallbackProviders.length ? ai.fallbackProviders.map(esc).join(', ') : 'none'} · selection: ${esc(ai.selection)}</div>${rows}`;
 }

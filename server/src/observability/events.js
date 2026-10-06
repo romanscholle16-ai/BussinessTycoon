@@ -15,17 +15,18 @@ export function serializeEvent(r) {
   const errText = r.error ? String(r.error) : null, code = errText ? (ERROR_CODE_RE.exec(errText)?.[1] ?? null) : null;
   const retry = r.t_retry != null && (r.type.startsWith('task.') || r.type.startsWith('recovery.') || meta.retry_count != null) ? { count: r.t_retry, max: r.t_max } : null;
   const { reason: _r, runId, seq, ...rest } = meta;
+  const aiMsg = r.type.startsWith('ai.') ? `AI ${r.type.split('.')[1].replace('_', ' ')}${meta.provider ? ` via ${meta.provider}` : ''}${r.action ? ` (${r.action})` : ''}` : null;
   const verb = r.type.split('.')[1], generic = /^(transition:|claimed by|started by|task )/.test(r.action) || r.action === r.type;
   const subject = r.type.startsWith('task.') ? `Task ${r.t_type ?? r.task_id ?? ''}`.trim() : r.type.startsWith('agent.') ? `Agent ${r.agent_id ?? ''}`.trim() : null;
   const isDecision = r.type === 'supervisor.decision' || r.type === 'supervisor.lifecycle';
-  const message = reason ?? (subject ? `${subject} ${verb}${generic ? '' : ` (${r.action})`}` : isDecision ? r.action : r.action);
+  const message = reason ?? aiMsg ?? (subject ? `${subject} ${verb}${generic ? '' : ` (${r.action})`}` : isDecision ? r.action : r.action);
   return {
     id: r.id, ts: r.ts, kind: r.type, name: isDecision ? r.action : r.type, action: sanitizeText(r.action, 120), component, severity: toPublic(r.severity),
     message: sanitizeText(message, 240), result: r.result ? sanitizeText(r.result, 80) : null,
     businessId: r.business_id, agentId: r.agent_id, taskId: r.task_id, parentTaskId: r.t_parent ?? null, correlationId: r.t_corr ?? null,
     supervisorRunId: typeof runId === 'string' ? runId : null, cycle: Number.isInteger(seq) ? seq : null,
     error: errText ? { code, message: sanitizeText(code ? errText.replace(ERROR_CODE_RE, '') : errText, 240) } : null,
-    retry, cost: r.cost_minor > 0 ? { amountMinor: r.cost_minor, currency: r.currency } : null, // cost is null unless a real cost was recorded
+    retry, cost: r.cost_minor > 0 ? { amountMinor: r.cost_minor, currency: r.currency } : (typeof meta.costUsd === 'number' ? { amountMinor: Math.round(meta.costUsd * 100), amountUsd: meta.costUsd, currency: 'USD', basis: meta.costBasis ?? 'actual' } : null), // null unless a real cost was recorded
     dataMode: r.data_mode, details: sanitizeValue(rest),
   };
 }

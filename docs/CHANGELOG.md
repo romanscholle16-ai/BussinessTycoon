@@ -31,3 +31,8 @@
 - Migration 0004 (indexes only). Producer severity rules (retry/release/recovery = warning, Supervisor failed = critical). Console logging replaced by the structured logger. Supervisor status gained `stateSince`/`lastOkCycleAt`.
 - Iso Command Hub: health pill, live HQ health + Supervisor, real event timeline, real agent roster (design unchanged).
 - Tests: tests/observability.test.js (16 tests).
+
+## Phase 6 — AI Providers
+- `server/src/ai/`: provider-neutral AI service with Claude, OpenAI-compatible and Ollama adapters, deterministic mock, Freebuff boundary; deterministic selection, bounded retry/failover, circuit breaker, rate-limit handling, timeouts/cancellation, cost estimation/accounting with fail-closed ceilings, redaction, observability events, `ai.complete` Agent OS handler (capability `ai`).
+- `GET /api/ai/providers`; HQ panel shows AI status; `.env` loader and AI_* settings; token-count keys no longer mistaken for credentials; observability exposes AI cost.
+- No migration, no new dependencies. Tests: tests/ai.test.js (14 tests).

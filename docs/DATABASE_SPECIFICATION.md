@@ -64,3 +64,6 @@ The Supervisor reuses existing storage: run state and the single-instance lock i
 
 ## Phase 5: migration `0004_observability_indexes` (indexes only)
 `idx_events_task (task_id, ts)`, `idx_events_agent (agent_id, ts)`, `idx_events_severity (severity, ts)` (partial on non-null ids where applicable) and `idx_tasks_completed (completed_at)`, each justified by an observability query (task/agent traces, severity/error views, windowed task metrics). No table or data change; tested by upgrading a populated version-3 database (integrity and foreign keys verified, events untouched). The `events` schema already carried everything needed (correlation/retry/parent come from joining `tasks`); severity storage keeps `warn`, exposed as `warning`. Measured on 100,000 events + 20,000 tasks: default event list 0.5 ms, error view ~25 ms, health ~11 ms, 1 h metrics ~2 ms, 24 h metrics ~23 ms.
+
+## Phase 6: no schema change
+AI observability uses existing `events` rows (`ai.completed`, `ai.failed`, `ai.fallback`, `ai.provider_state`; `metadata_json` carries provider/model/attempts/latency/tokens/`costUsd`/`costBasis`; `cost_minor` stays 0 because AI costs are sub-cent: the precise USD value is in metadata and surfaced as `cost.amountUsd` by the observability API). Provider runtime state (breaker, rate limits) is in memory and is rebuilt after restart. Schema version stays 4.

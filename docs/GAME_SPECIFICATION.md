@@ -22,5 +22,8 @@ The HQ (Supervisor tower) panel shows a LIVE SUPERVISOR block (state, cycle, in-
 ### Phase 5 addition (observability in the Iso Command Hub)
 Design unchanged. New real-data surfaces: a **SYSTEM ● status pill** under the KPI bar (tap → HQ panel); the **HQ/Supervisor tower panel** shows live system health (component cards, issue count, attention items), live Supervisor status and recent decisions; the **LOG dock panel** is a real event timeline (severity badges, ALL/WARN+/ERRORS and component filters, SHOW STEPS toggle; idle cycles never appear); the **AGENTS panel** lists real agents (state, health, current task, success rate, heartbeat age). Polling every 5 s only while the tab is visible. KPIs, towers, business tabs, money, quests are still MOCK/DEMO and labelled so.
 
+### Phase 6 addition
+The HQ panel shows an honest AI status block: DISABLED when no provider is active, otherwise the active/fallback providers with status, model, last error, rate-limit window and whether the price is known. No AI activity is displayed unless real events exist.
+
 ### Phase 1 client layout
 `client/public/` — `index.html`, `styles.css`, `manifest.webmanifest`, `sw.js` (app-shell cache; /api never cached), `icons/`, `js/{main,world,camera,ui,rules,util}.js`, `js/data/mock.js` (the only data source; replace in later phases). `lab/` holds the throwaway Design Lab prototypes, kept for reference.

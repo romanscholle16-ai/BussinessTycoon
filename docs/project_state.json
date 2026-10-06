@@ -1,6 +1,6 @@
 {
   "project": "Autonomous Tycoon",
-  "currentPhase": 5,
+  "currentPhase": 6,
   "phaseStatus": "complete",
   "completedPhases": [
     0,
@@ -8,9 +8,10 @@
     2,
     3,
     4,
-    5
+    5,
+    6
   ],
-  "nextAuthorizedPhase": 6,
+  "nextAuthorizedPhase": 7,
   "phases": [
     {
       "id": 0,
@@ -45,7 +46,7 @@
     {
       "id": 6,
       "name": "AI Providers",
-      "status": "not_started"
+      "status": "complete"
     },
     {
       "id": 7,
@@ -145,7 +146,7 @@
   ],
   "lastValidation": {
     "command": "npm test",
-    "result": "pass (74 tests)"
+    "result": "pass (88 tests)"
   },
   "lastCommit": "see git log",
   "blocked": [],
@@ -172,5 +173,18 @@
     "implemented": true,
     "readOnly": true,
     "migration": "0004 indexes only"
+  },
+  "ai": {
+    "implemented": true,
+    "defaultEnabled": false,
+    "liveProviderTested": false,
+    "providers": [
+      "claude",
+      "openai",
+      "ollama",
+      "mock",
+      "freebuff(boundary)"
+    ],
+    "dependencies": 0
   }
 }

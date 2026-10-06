@@ -1,7 +1,7 @@
 // Input validation shared by the Agent OS and the API.
 export class ValidationError extends Error { constructor(message, field) { super(message); this.name = 'ValidationError'; this.code = 'validation'; this.field = field; } }
 const ID_RE = /^[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}$/;
-const SECRET_KEY_RE = /(secret|password|passwd|token|api[_-]?key|apikey|credential|private[_-]?key|authorization|cookie)/i;
+const SECRET_KEY_RE = /(secret|password|passwd|token(?!s)|api[_-]?key|apikey|credential|private[_-]?key|authorization|cookie)/i;
 
 export function assertId(v, field = 'id') { if (typeof v !== 'string' || !ID_RE.test(v)) throw new ValidationError(`${field} must match ${ID_RE}`, field); return v; }
 export const isId = (v) => typeof v === 'string' && ID_RE.test(v);

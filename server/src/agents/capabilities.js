@@ -6,6 +6,7 @@ export const CAPABILITIES = {
   research:    { enabled: true,  external: false, description: 'gather and score information (internal data only in Phase 3)' },
   analyze:     { enabled: true,  external: false, description: 'analyze stored data' },
   generate:    { enabled: true,  external: false, description: 'create content/assets (deterministic stubs only in Phase 3)' },
+  ai:          { enabled: true,  external: true,  description: 'call the configured AI providers through the AI service (never granted to demo agents; providers are disabled unless configured)' },
   publish:     { enabled: false, external: true,  description: 'publish to an external marketplace/site (not available until Phase 8+)' },
   spend:       { enabled: false, external: true,  description: 'spend money (not available until Phase 12)' },
   communicate: { enabled: false, external: true,  description: 'message customers/third parties (not available until Phase 11)' },

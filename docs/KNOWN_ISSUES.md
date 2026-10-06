@@ -29,3 +29,11 @@
 | KI-027 | UI polls every 5 s and does not stream; the timeline can lag up to 5 s | SSE later |
 | KI-028 | Per-agent windowed metrics come from `tasks`; agent counters in `agents.metrics_json` are all-time only | acceptable |
 | KI-029 | Dashboard KPIs, towers, finance, quests and business tabs are still mock (labelled) | later phases |
+| KI-030 | **No live provider test was possible**: no ANTHROPIC_API_KEY/OPENAI_API_KEY and no Ollama server exist in this environment; adapters are verified against request/response doubles that mirror the documented wire formats (plus a real refused local connection) | verify with real credentials/servers before relying on them |
+| KI-031 | Provider adapters speak raw HTTP; wire formats can drift (e.g. new Claude model parameter rules); sampling parameters are omitted for models known to reject them | adapter-local fixes |
+| KI-032 | Built-in Claude prices are a dated snapshot (2026-09-25); override `ai.providers.claude.pricing` when prices change | config |
+| KI-033 | Pre-call input size is estimated at 4 characters per token; real counts come only from the provider response | by design |
+| KI-034 | Provider state (breaker, rate limits, stats) is in memory and resets on restart | acceptable |
+| KI-035 | An Agent OS retry of an AI task is a new paid call; there is no cross-attempt budget yet | Phase 12 |
+| KI-036 | OpenAI-compatible structured output uses `json_object` on non-OpenAI endpoints; schema is not enforced there | adapter limitation |
+| KI-037 | Freebuff is not integrated | needs a documented API |

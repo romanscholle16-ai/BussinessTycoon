@@ -46,5 +46,10 @@
   },
   "observability": {
     "healthCacheMs": 2000
+  },
+  "ai": {
+    "activeProvider": "none",
+    "fallbackProviders": [],
+    "selection": "preferred"
   }
 }

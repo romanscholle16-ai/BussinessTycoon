@@ -35,3 +35,9 @@
 - Per-business drill-down screens and charts (when real business data exists)
 - Alert thresholds configurable from the UI (Phase 20)
 - Health history (store periodic snapshots to show trends)
+- Live provider smoke tests behind an explicit opt-in flag when credentials/servers exist
+- Streaming responses; tool use / vision / embeddings; prompt caching for Claude (Phase 7+ as needed)
+- Persist provider stats/breaker state; per-provider concurrency and rate limiting
+- Cross-task AI budget windows and approval flow (Phases 12, 20)
+- Freebuff adapter if a stable programmatic interface appears
+- Optional SDK-backed Claude adapter

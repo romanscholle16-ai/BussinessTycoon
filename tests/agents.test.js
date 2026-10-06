@@ -65,7 +65,7 @@ test('agent registration validates definitions and keeps secrets and external po
     assert.throws(() => s.os.registry.register({ ...base, permissions: { capabilities: ['teleport'] } }), /Unknown capability/);
     assert.throws(() => s.os.registry.register({ ...base, limits: { maxConcurrentTasks: 5 } }), ValidationError);
     assert.throws(() => s.os.registry.register({ ...base, businessId: 'etsy', permissions: { capabilities: ['research'], businesses: ['*'] } }), /shared agents/);
-    assert.ok(Object.values(CAPABILITIES).filter((c) => c.external).every((c) => !c.enabled), 'every external capability is disabled');
+    assert.ok(Object.entries(CAPABILITIES).filter(([k, c]) => c.external && k !== 'ai').every(([, c]) => !c.enabled), 'every external capability except the AI service is disabled'); assert.equal(CAPABILITIES.ai.enabled, true);
     const ok = s.os.registry.register({ ...base, name: 'Good', businessId: 'etsy' }, { dataMode: 'test' });
     assert.deepEqual(ok.permissions, { capabilities: ['research'], businesses: ['etsy'] });
     assert.equal(ok.config.limits.timeoutMs, 30000);
@@ -259,7 +259,7 @@ test('permissions: capability and business checks are enforced', async () => {
     seedDemo(s.db, s.repos);
     const pub = q.submit({ type: 'demo.publish_attempt', dataMode: 'demo' }); await s.os.startAll(); await s.os.runUntilIdle();
     assert.equal(q.get(pub.id).error_code, 'permission_denied');
-    for (const ag of s.os.registry.list({ dataMode: 'demo' })) for (const c of ag.permissions.capabilities) assert.equal(CAPABILITIES[c].external, false);
+    for (const ag of s.os.registry.list({ dataMode: 'demo' })) for (const c of ag.permissions.capabilities) assert.equal(CAPABILITIES[c].external, false, 'demo agents hold no external capability (including ai)');
   } finally { s.cleanup(); }
 });
 

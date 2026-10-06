@@ -1,6 +1,6 @@
 // Output sanitizing for anything that leaves the server through observability APIs/logs.
 // Redacts credential-like keys, drops stack traces, hides filesystem paths, bounds sizes. Deterministic.
-const SECRET_KEY = /(secret|password|passwd|token|api[_-]?key|apikey|credential|private[_-]?key|authorization|cookie|session)/i;
+const SECRET_KEY = /(secret|password|passwd|token(?!s)|api[_-]?key|apikey|credential|private[_-]?key|authorization|cookie|session)/i;
 const DROP_KEY = /^(stack|stacktrace|path|file|filename|cwd|dir|directory)$/i;
 const PATH_RE = /(?:[A-Za-z]:\\[^\s"']*|\/(?:home|root|usr|var|tmp|etc|opt|mnt|Users|private)\/[^\s"']*)/g;
 const MAX_STR = 300, MAX_KEYS = 40, MAX_ITEMS = 20, MAX_DEPTH = 4;

@@ -121,3 +121,7 @@ Retry scheduled, task released after interruption, recovery actions, skipped (un
 
 ## Not in Phase 4
 Approvals/human control (Phase 20), budgets in money (Phase 12), ROI-based allocation (Phase 16), agent creation (Phase 18), multi-process scheduling, per-business quotas, automatic failing of permanently unservable tasks.
+
+---
+# Phase 6 addition: AI capability and task type
+Capability `ai` (enabled, external): required by handler `ai.complete`, which calls the AI service (`server/src/ai/handlers.js`). Payload: `prompt` (required), `system`, `maxTokens`, `temperature`, `jsonSchema`, `provider`, `model`, `allowFallback`, `maxCostUsd`, `purpose`. Result: `output`, `structured`, `provider`, `model`, `finishReason`, `usage`, `cost`, `attempts`, `latencyMs` (no prompt is stored). Failure mapping and retry rules: ARCHITECTURE.md → AI providers. Demo agents never hold `ai`. Real business AI workflows arrive in Phases 7–11.

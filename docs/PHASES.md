@@ -37,7 +37,7 @@ Status vocabulary: `not started`, `in progress`, `completed`, `blocked`, `deferr
 ## PHASE 6 — AI Providers
 - Scope: Provider abstraction (Claude, Freebuff, OpenAI, Ollama), failover, image provider (GPT Images 2.5 preferred).
 - Acceptance: Swap provider by config; failover tested with fakes; no hard-coded provider.
-- Status: not started
+- Status: completed
 
 ## PHASE 7 — Research Engine
 - Scope: Shared research: demand, competition, trends, gaps.
