@@ -1,0 +1,56 @@
+# CHECKLIST
+
+`[ ]` not started · `[~]` active/in progress · `[x]` complete. Only the active phase may be worked on. Update when a phase is verified and committed.
+
+- [~] **PHASE 0 — Foundation & Project Control** — ACTIVE
+  - Acceptance: Docs complete; smoke test passes; committed.
+- [ ] **PHASE 1 — Game Client** — Not started
+  - Acceptance: Runs on Android browser; pan/zoom smooth; installable PWA; no real backend data required.
+- [ ] **PHASE 2 — Database** — Not started
+  - Acceptance: Migrations apply cleanly from empty; repository tests pass.
+- [ ] **PHASE 3 — Agent Operating System** — Not started
+  - Acceptance: Agents register, execute stub tasks, persist state; one OS shared by all businesses.
+- [ ] **PHASE 4 — Supervisor** — Not started
+  - Acceptance: Supervisor schedules and recovers stub tasks; priority and budget rules enforced.
+- [ ] **PHASE 5 — Observability** — Not started
+  - Acceptance: Every task emits events with IDs; timeline queryable via API.
+- [ ] **PHASE 6 — AI Providers** — Not started
+  - Acceptance: Swap provider by config; failover tested with fakes; no hard-coded provider.
+- [ ] **PHASE 7 — Research Engine** — Not started
+  - Acceptance: Produces structured opportunity reports from sandboxed sources.
+- [ ] **PHASE 8 — Etsy** — Not started
+  - Acceptance: End-to-end in sandbox mode; IP/similarity gate blocks copies.
+- [ ] **PHASE 9 — Game Assets** — Not started
+  - Acceptance: Asset pack pipeline works in sandbox with QA gate.
+- [ ] **PHASE 10 — Affiliate** — Not started
+  - Acceptance: Opportunity→program→content→publish→track in sandbox; anti-spam controls enforced.
+- [ ] **PHASE 11 — Fiverr** — Not started
+  - Acceptance: Order lifecycle simulated; risky cases escalate to human.
+- [ ] **PHASE 12 — Finance** — Not started
+  - Acceptance: Ledger accurate; $0-5 auto, $5-25 rules, $25+ human approval enforced.
+- [ ] **PHASE 13 — Progression** — Not started
+  - Acceptance: Progression derived from real events; shown in game.
+- [ ] **PHASE 14 — Quests + Upgrades** — Not started
+  - Acceptance: Quests/upgrades persist and gate real capabilities.
+- [ ] **PHASE 15 — Automation** — Not started
+  - Acceptance: Recoverable browser sessions; legitimate automation only.
+- [ ] **PHASE 16 — Resource Optimization** — Not started
+  - Acceptance: Measured cost reduction without quality loss.
+- [ ] **PHASE 17 — Self-Improvement** — Not started
+  - Acceptance: Changes are tested, reversible, and audited.
+- [ ] **PHASE 18 — Agent Creation** — Not started
+  - Acceptance: Candidates evaluated before promotion; retirement works.
+- [ ] **PHASE 19 — Reliability** — Not started
+  - Acceptance: Fault-injection tests pass.
+- [ ] **PHASE 20 — Security / Human Control** — Not started
+  - Acceptance: Emergency stop halts all agents; approvals enforced; audit complete.
+- [ ] **PHASE 21 — Full Integration** — Not started
+  - Acceptance: Four businesses run under Supervisor with live game view.
+- [ ] **PHASE 22 — Phone / Windows Deployment** — Not started
+  - Acceptance: Survives reboot; phone connects over Wi-Fi.
+- [ ] **PHASE 23 — Real-World Sandbox** — Not started
+  - Acceptance: Real small-scale actions succeed under approval limits.
+- [ ] **PHASE 24 — Production Readiness** — Not started
+  - Acceptance: Readiness checklist signed off.
+- [ ] **PHASE 25 — Autonomous Operation** — Not started
+  - Acceptance: Sustained unattended operation meeting targets.

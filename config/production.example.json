@@ -1,0 +1,5 @@
+{
+  "env": "production",
+  "server": { "host": "0.0.0.0", "port": 8787 },
+  "logging": { "level": "info", "dir": "runtime/logs" }
+}

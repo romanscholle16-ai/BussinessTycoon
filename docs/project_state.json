@@ -1,0 +1,146 @@
+{
+  "project": "Autonomous Tycoon",
+  "currentPhase": 0,
+  "phaseStatus": "complete_pending_review",
+  "completedPhases": [],
+  "nextAuthorizedPhase": 1,
+  "phases": [
+    {
+      "id": 0,
+      "name": "Foundation & Project Control",
+      "status": "in_progress"
+    },
+    {
+      "id": 1,
+      "name": "Game Client",
+      "status": "not_started"
+    },
+    {
+      "id": 2,
+      "name": "Database",
+      "status": "not_started"
+    },
+    {
+      "id": 3,
+      "name": "Agent Operating System",
+      "status": "not_started"
+    },
+    {
+      "id": 4,
+      "name": "Supervisor",
+      "status": "not_started"
+    },
+    {
+      "id": 5,
+      "name": "Observability",
+      "status": "not_started"
+    },
+    {
+      "id": 6,
+      "name": "AI Providers",
+      "status": "not_started"
+    },
+    {
+      "id": 7,
+      "name": "Research Engine",
+      "status": "not_started"
+    },
+    {
+      "id": 8,
+      "name": "Etsy",
+      "status": "not_started"
+    },
+    {
+      "id": 9,
+      "name": "Game Assets",
+      "status": "not_started"
+    },
+    {
+      "id": 10,
+      "name": "Affiliate",
+      "status": "not_started"
+    },
+    {
+      "id": 11,
+      "name": "Fiverr",
+      "status": "not_started"
+    },
+    {
+      "id": 12,
+      "name": "Finance",
+      "status": "not_started"
+    },
+    {
+      "id": 13,
+      "name": "Progression",
+      "status": "not_started"
+    },
+    {
+      "id": 14,
+      "name": "Quests + Upgrades",
+      "status": "not_started"
+    },
+    {
+      "id": 15,
+      "name": "Automation",
+      "status": "not_started"
+    },
+    {
+      "id": 16,
+      "name": "Resource Optimization",
+      "status": "not_started"
+    },
+    {
+      "id": 17,
+      "name": "Self-Improvement",
+      "status": "not_started"
+    },
+    {
+      "id": 18,
+      "name": "Agent Creation",
+      "status": "not_started"
+    },
+    {
+      "id": 19,
+      "name": "Reliability",
+      "status": "not_started"
+    },
+    {
+      "id": 20,
+      "name": "Security / Human Control",
+      "status": "not_started"
+    },
+    {
+      "id": 21,
+      "name": "Full Integration",
+      "status": "not_started"
+    },
+    {
+      "id": 22,
+      "name": "Phone / Windows Deployment",
+      "status": "not_started"
+    },
+    {
+      "id": 23,
+      "name": "Real-World Sandbox",
+      "status": "not_started"
+    },
+    {
+      "id": 24,
+      "name": "Production Readiness",
+      "status": "not_started"
+    },
+    {
+      "id": 25,
+      "name": "Autonomous Operation",
+      "status": "not_started"
+    }
+  ],
+  "lastValidation": {
+    "command": "node --test tests/smoke.test.js",
+    "result": "pass"
+  },
+  "lastCommit": "see git log",
+  "blocked": [],
+  "deferred": []
+}

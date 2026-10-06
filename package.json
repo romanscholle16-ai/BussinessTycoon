@@ -1,0 +1,13 @@
+{
+  "name": "autonomous-tycoon",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Autonomous Tycoon: autonomous-business platform with a 2D tycoon game control layer.",
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "start": "node server/src/index.js",
+    "test": "node --test tests/",
+    "test:smoke": "node --test tests/smoke.test.js"
+  }
+}

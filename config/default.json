@@ -1,0 +1,12 @@
+{
+  "env": "development",
+  "server": { "host": "127.0.0.1", "port": 8787 },
+  "logging": { "level": "info", "dir": "runtime/logs" },
+  "paths": { "data": "runtime/data" },
+  "budget": {
+    "bootstrapUsd": 100,
+    "autoApproveMaxUsd": 5,
+    "ruleApproveMaxUsd": 25,
+    "humanApprovalAboveUsd": 25
+  }
+}
