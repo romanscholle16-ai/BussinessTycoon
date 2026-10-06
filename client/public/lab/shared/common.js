@@ -18,7 +18,7 @@ const costBars = b => { const tot = b.cost || 1; return Object.entries(b.cats).f
 
 // shared lab chip: switch concepts + permanent DEMO DATA label
 function labChip(current) {
-  const names = ['Classic Tycoon', 'Command Center', 'Cyber City', 'Minimal Strategy', 'Living Empire'];
+  const names = ['Classic Tycoon', 'Command Center', 'Cyber City', 'Minimal Strategy', 'Living Empire', 'Neon Workspace', 'Terminal Ops', 'Bento Grid', 'Iso Command HUD', 'Pipeline Flow'];
   const d = document.createElement('div');
   d.id = 'labchip';
   d.innerHTML = `<button aria-label="Design lab menu">LAB ${current}▾</button><div class="menu" hidden>${names.map((n, i) => `<a href="../c${i + 1}/index.html" ${i + 1 === current ? 'class="cur"' : ''}>${i + 1}. ${n}</a>`).join('')}<a href="../">◀ Design Lab home</a><small>DEMO DATA – not real money</small></div>`;
@@ -59,3 +59,15 @@ class Camera {
   view() { const hw = this.w / 2 / this.z, hh = this.h / 2 / this.z; return { x0: this.x - hw, y0: this.y - hh, x1: this.x + hw, y1: this.y + hh }; }
 }
 const text = (ctx, s, x, y, size, color, align = 'center') => { ctx.font = `bold ${size}px ui-monospace,Menlo,Consolas,monospace`; ctx.textAlign = align; ctx.fillStyle = color; ctx.fillText(s, Math.round(x), Math.round(y)); };
+
+// demo 7-point cumulative-profit series per business (deterministic, DEMO DATA)
+const series = (b, n = 7) => { const o = []; for (let i = 0; i < n; i++) { const f = i / (n - 1); o.push(b.profit * (f * f * (3 - 2 * f)) + (hash(i, b.rev | 0) - .5) * Math.abs(b.profit) * .25 * (i && i < n - 1 ? 1 : 0)); } return o; };
+function spark(cv, d, color = '#00e5ff', fill = true) {
+  const dpr = Math.min(devicePixelRatio || 1, 2), w = cv.clientWidth || 100, h = cv.clientHeight || 30; cv.width = w * dpr; cv.height = h * dpr;
+  const x = cv.getContext('2d'); x.scale(dpr, dpr); const mn = Math.min(...d), mx = Math.max(...d), r = mx - mn || 1;
+  const pt = (v, i) => [2 + i / (d.length - 1) * (w - 4), h - 3 - (v - mn) / r * (h - 8)];
+  x.beginPath(); d.forEach((v, i) => { const [a, b] = pt(v, i); i ? x.lineTo(a, b) : x.moveTo(a, b); });
+  x.strokeStyle = color; x.lineWidth = 1.6; x.stroke();
+  if (fill) { x.lineTo(w - 2, h); x.lineTo(2, h); x.closePath(); x.globalAlpha = .18; x.fillStyle = color; x.fill(); x.globalAlpha = 1; }
+  const [ex, ey] = pt(d[d.length - 1], d.length - 1); x.beginPath(); x.arc(ex, ey, 2.5, 0, 7); x.fillStyle = color; x.fill();
+}

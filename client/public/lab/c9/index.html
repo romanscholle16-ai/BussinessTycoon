@@ -1,0 +1,75 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Concept 9 – Iso Command HUD</title>
+<link rel="stylesheet" href="../shared/lab.css">
+<style>
+:root{--c:#00f0ff;--m:#ff2bd6;--ok:#37ff9a;--r:#ff4466;--a:#ffbe2e;--t:#dff;--mu:#6f93b3;--p:#050d18e6}
+body{background:#030812;color:var(--t);font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
+#c{position:absolute;inset:0;width:100%;height:100%}
+.hud{position:absolute;z-index:5;background:var(--p);border:1px solid #00f0ff44;padding:8px 10px;backdrop-filter:blur(4px);clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px))}
+#kp{top:calc(4px + env(safe-area-inset-top));left:4px;right:90px;display:flex;gap:14px;justify-content:space-between}
+#kp div small{display:block;color:var(--mu);font-size:9px;letter-spacing:1px}#kp b{font-size:15px;color:var(--c)}
+.ok{color:var(--ok)!important}.no{color:var(--r)!important}
+#legend{top:calc(64px + env(safe-area-inset-top));left:4px;font-size:10px;color:var(--mu);line-height:1.6}
+#panel{left:4px;right:4px;bottom:calc(60px + env(safe-area-inset-bottom));max-height:52%;overflow:auto;padding:10px;visibility:hidden}
+#panel.on{visibility:visible}
+@media(min-width:900px){#panel{left:auto;right:8px;top:70px;bottom:70px;width:340px;max-height:none}}
+h2{margin:0 0 6px;font-size:14px;letter-spacing:1px}
+.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:6px 0}.row3 div{border:1px solid #00f0ff33;padding:5px;color:var(--mu);font-size:9px}.row3 b{display:block;color:var(--t);font-size:14px}
+.note{border-left:3px solid var(--a);background:#ffbe2e10;padding:6px 8px;margin:6px 0;line-height:1.4}.note.o{border-color:var(--ok);background:#37ff9a10}
+.agent,.ev,.quest{padding:6px 0;border-top:1px solid #00f0ff22}.agent .name{color:var(--c)}.agent .meta,.agent .task{display:block;color:var(--mu)}.xp,.bar{display:block;height:3px;background:#00f0ff22;margin:3px 0}.xp u,.bar u{display:block;height:100%;background:var(--c)}.ev time{color:var(--m);margin-right:8px}.cb{display:grid;grid-template-columns:40px 1fr 48px;gap:6px}
+.tabs{display:flex;gap:4px;margin:6px 0}.tabs button{flex:1;background:none;border:1px solid #00f0ff44;color:var(--mu);min-height:36px;font-size:11px}.tabs button.on{color:#001;background:var(--c)}
+.dock{position:absolute;left:4px;right:4px;bottom:calc(4px + env(safe-area-inset-bottom));display:flex;gap:4px;z-index:6}.dock button{flex:1;min-height:50px;background:var(--p);color:var(--mu);border:1px solid #00f0ff44;font-size:10px;letter-spacing:.5px}.dock button.on{color:var(--c);border-color:var(--c)}
+.go{background:var(--c);color:#001;border:0;padding:0 12px;min-height:40px;font-weight:bold;margin-top:6px}.go:disabled{opacity:.5}
+.x{float:right;background:none;border:1px solid #00f0ff55;color:var(--c);min-width:36px;min-height:34px}
+</style></head><body>
+<canvas id="c"></canvas>
+<div class="hud" id="kp"></div><div class="hud" id="legend">▮ height = revenue<br><span class="ok">▮</span> glow green = profit &nbsp;<span class="no">▮</span> red = loss<br>tap a tower · drag · pinch</div>
+<div class="hud" id="panel"></div>
+<div class="dock" id="dock"><button data-m="map" class="on">◈ CITY</button><button data-m="biz">▦ BIZ</button><button data-m="agents">⚙ AGENTS</button><button data-m="queue">! QUEUE</button><button data-m="log">≡ LOG</button></div>
+<script src="../shared/data.js"></script><script src="../shared/common.js"></script>
+<script>
+labChip(9);
+const S = { sel: null, tab: 'why', mode: 'map', done: new Set(), inst: new Set() };
+const G = { hq: [0, 0], etsy: [-3, -3], assets: [3, -3], affiliate: [-3, 3], fiverr: [3, 3] }; // grid coords
+const TW = 46, TH = 23;
+const iso = (gx, gy) => [(gx - gy) * TW / 2 * 1.9, (gx + gy) * TH / 2 * 1.9];
+const cv = $('#c'), ctx = cv.getContext('2d');
+const hit = (wx, wy) => { for (const k in G) { const [x, y] = iso(...G[k]); if (Math.abs(wx - x) < 34 && wy > y - 80 && wy < y + 28) return k; } return null; };
+const cam = new Camera(cv, { z: 1, min: .5, max: 2.8, limit: 260, onTap: (wx, wy) => { const k = hit(wx, wy); if (k) { S.sel = k; S.tab = 'why'; S.mode = 'map'; const [x, y] = iso(...G[k]); cam.focus(x, y - 20 + cam.h * .15 / Math.max(cam.z, 1.2), Math.max(cam.z, 1.2)); } else S.sel = null; panel(); } });
+function box(x, y, w, h, c, a, glowc, sel) { // iso prism: top, left, right
+  const dx = w * .9, dy = w * .45;
+  ctx.save(); if (glowc) { ctx.shadowColor = glowc; ctx.shadowBlur = 16; }
+  ctx.fillStyle = c + '55'; ctx.beginPath(); ctx.moveTo(x, y - h); ctx.lineTo(x + dx, y - h + dy); ctx.lineTo(x, y - h + 2 * dy); ctx.lineTo(x - dx, y - h + dy); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#071a2e'; ctx.beginPath(); ctx.moveTo(x - dx, y - h + dy); ctx.lineTo(x, y - h + 2 * dy); ctx.lineTo(x, y + 2 * dy); ctx.lineTo(x - dx, y + dy); ctx.fill();
+  ctx.fillStyle = '#05101e'; ctx.beginPath(); ctx.moveTo(x + dx, y - h + dy); ctx.lineTo(x, y - h + 2 * dy); ctx.lineTo(x, y + 2 * dy); ctx.lineTo(x + dx, y + dy); ctx.fill();
+  ctx.strokeStyle = c; ctx.lineWidth = sel ? 2.5 : 1.2; ctx.beginPath(); ctx.moveTo(x, y - h); ctx.lineTo(x + dx, y - h + dy); ctx.lineTo(x, y - h + 2 * dy); ctx.lineTo(x - dx, y - h + dy); ctx.closePath(); ctx.moveTo(x - dx, y - h + dy); ctx.lineTo(x - dx, y + dy); ctx.lineTo(x, y + 2 * dy); ctx.lineTo(x + dx, y + dy); ctx.lineTo(x + dx, y - h + dy); ctx.moveTo(x, y - h + 2 * dy); ctx.lineTo(x, y + 2 * dy); ctx.stroke(); ctx.restore();
+  for (let i = 1; i < h / 9; i++) { if ((a + i) % 3) { ctx.fillStyle = c + 'aa'; ctx.fillRect(x - dx + 5, y - h + dy + i * 9 + 2, 3, 3); ctx.fillRect(x + dx - 9, y - h + dy + i * 9 + 5, 3, 3); } }
+}
+function frame(t) {
+  cam.begin(ctx);
+  ctx.strokeStyle = '#0b2a44'; ctx.lineWidth = 1; for (let i = -8; i <= 8; i++) { let a = iso(i, -8), b = iso(i, 8), c = iso(-8, i), d = iso(8, i); ctx.beginPath(); ctx.moveTo(...a); ctx.lineTo(...b); ctx.moveTo(...c); ctx.lineTo(...d); ctx.stroke(); }
+  for (const b of D.biz) { const [x, y] = iso(...G[b.id]), prof = b.profit >= 0, col = prof ? '#37ff9a' : '#ff4466'; ctx.strokeStyle = col + '88'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, 8); ctx.lineTo(...(() => { const m = iso(G[b.id][0], 0); return [m[0], m[1] + 8]; })()); ctx.lineTo(x, y + 8); ctx.stroke();
+    for (let i = 0; i < 3; i++) { const u = ((t / 3000 + i / 3) % 1), v = prof ? 1 - u : u, m = iso(G[b.id][0], 0), px = v < .5 ? (m[0] * v * 2) : m[0] + (x - m[0]) * (v - .5) * 2, py = v < .5 ? (8 + (m[1]) * v * 2) : m[1] + 8 + (y - m[1]) * (v - .5) * 2; ctx.fillStyle = col; ctx.fillRect(px - 2, py - 2, 4, 4); } }
+  const order = Object.keys(G).sort((a, b) => iso(...G[a])[1] - iso(...G[b])[1]);
+  order.forEach((k, i) => { const [x, y] = iso(...G[k]); if (k === 'hq') { box(x, y, 24, 70 + Math.sin(t / 500) * 2, '#00f0ff', i, '#00f0ff', S.sel === k); ctx.strokeStyle = '#00f0ff'; ctx.beginPath(); ctx.moveTo(x, y - 70); ctx.lineTo(x, y - 110); ctx.stroke(); text(ctx, 'SUPERVISOR', x, y + 38, 8, '#00f0ff'); return; }
+    const b = bizById(k), lv = 1; box(x, y, 22, 20 + b.rev * 1.5 + (S.inst.size ? 0 : 0), b.color, i, b.profit >= 0 ? '#37ff9a' : '#ff4466', S.sel === k);
+    text(ctx, b.short, x, y + 38, 9, b.color); text(ctx, signed(b.profit, 1), x, y + 49, 9, b.profit >= 0 ? '#37ff9a' : '#ff4466'); if (b.status !== 'profit') text(ctx, b.status === 'loss' ? '▲ LOSS' : '◔ WATCH', x, y - 20 - b.rev * 1.5 - 14 + Math.sin(t / 250) * 2, 9, b.status === 'loss' ? '#ff4466' : '#ffbe2e'); });
+  cam.end(ctx); requestAnimationFrame(frame);
+}
+function kp() { $('#kp').innerHTML = `<div><small>NET 7D</small><b class="${D.net >= 0 ? 'ok' : 'no'}">${signed(D.net)}</b></div><div><small>REV</small><b>${money(D.rev, 0)}</b></div><div><small>COST</small><b>${money(D.cost, 0)}</b></div><div><small>ACTION</small><b class="${D.approvalsPending.some(p => !S.done.has(p.id)) ? 'no' : 'ok'}">${D.approvalsPending.filter(p => !S.done.has(p.id)).length}</b></div>`; }
+function panel() {
+  const p = $('#panel'), m = S.mode; let h = '';
+  if (m === 'map' && S.sel === 'hq') h = `<h2 style="color:var(--c)">SUPERVISOR</h2><div class="row3"><div>STATE<b style="font-size:10px">${D.supervisor.state}</b></div><div>LOAD<b>${pct(D.supervisor.load)}</b></div><div>LV<b>${D.empire.level}</b></div></div>${D.supervisor.decisions.map(d => `<div class="note o">${d}</div>`).join('')}`;
+  else if (m === 'map' && S.sel) { const b = bizById(S.sel); const body = S.tab === 'why' ? `<div class="note">WHY: ${b.why}</div><div class="note o">FOUND: ${b.opp}</div>` : S.tab === 'cost' ? costBars(b) : S.tab === 'agents' ? D.agents.filter(a => a.biz === b.id).map(agentRow).join('') || 'shared agents' : D.upgrades.filter(u => u.biz === b.id).map(u => `<div class="note o">${u.name} ${money(u.cost, 0)}<br>${u.effect}<br><button class="go" data-inst="${u.id}" ${u.cost > 25 || S.inst.has(u.id) ? 'disabled' : ''}>${S.inst.has(u.id) ? 'INSTALLED' : u.cost > 25 ? 'NEEDS APPROVAL' : 'INSTALL'}</button></div>`).join('');
+    h = `<button class="x" data-x>✕</button><h2 style="color:${b.color}">${b.name}</h2><div class="row3"><div>REV<b>${money(b.rev)}</b></div><div>COST<b>${money(b.cost)}</b></div><div>PROFIT<b class="${b.profit >= 0 ? 'ok' : 'no'}">${signed(b.profit)}</b></div></div><div class="tabs">${[['why', 'WHY'], ['cost', 'COSTS'], ['agents', 'AGENTS'], ['up', 'UPGRADE']].map(([k, n]) => `<button data-t="${k}" class="${S.tab === k ? 'on' : ''}">${n}</button>`).join('')}</div>${body}`; }
+  else if (m === 'biz') h = `<h2>BUSINESSES BY ROI</h2>${[...D.biz].sort((a, b) => b.roi - a.roi).map(b => `<div class="note ${b.profit >= 0 ? 'o' : ''}" data-pick="${b.id}"><b style="color:${b.color}">${b.name}</b> ${signed(b.profit)} · ROI ${pct(b.roi)}<br>${b.headline}</div>`).join('')}`;
+  else if (m === 'agents') h = `<h2>AGENTS</h2>${D.agents.map(agentRow).join('')}`;
+  else if (m === 'queue') h = `<h2>NEEDS YOU</h2>${D.approvalsPending.filter(q => !S.done.has(q.id)).map(q => `<div class="note">${q.text}<br>${q.cost > 25 ? 'over $25: human approval' : ''}<br><button class="go" data-ok="${q.id}">APPROVE</button></div>`).join('') || '<div class="note o">ALL CLEAR</div>'}<h2 style="margin-top:8px">QUESTS</h2>${D.quests.map(questRow).join('')}`;
+  else if (m === 'log') h = `<h2>EVENT TIMELINE</h2>${D.events.map(eventRow).join('')}`;
+  p.innerHTML = h; p.classList.toggle('on', !!h); kp();
+}
+document.addEventListener('click', e => { const t = e.target, d = t.dataset;
+  if (d.m) { S.mode = d.m; if (d.m !== 'map') S.sel = null; $$('#dock button').forEach(b => b.classList.toggle('on', b === t)); panel(); }
+  if (d.x !== undefined) { S.sel = null; panel(); } if (d.t) { S.tab = d.t; panel(); } if (d.inst) { S.inst.add(d.inst); panel(); } if (d.ok) { S.done.add(d.ok); panel(); }
+  const pk = t.closest('[data-pick]'); if (pk) { S.mode = 'map'; S.sel = pk.dataset.pick; S.tab = 'why'; $$('#dock button').forEach(b => b.classList.toggle('on', b.dataset.m === 'map')); panel(); } });
+const fit = () => clamp(Math.min(cam.w / 420, (cam.h - 190) / 330), .5, 1.5); cam.focus(0, 20, fit()); kp(); requestAnimationFrame(frame);
+</script></body></html>

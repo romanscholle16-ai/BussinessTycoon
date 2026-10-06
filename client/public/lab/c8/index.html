@@ -1,0 +1,74 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Concept 8 – Bento Grid</title>
+<link rel="stylesheet" href="../shared/lab.css">
+<style>
+:root{--bg:#07040f;--g1:#12082a;--ln:#ffffff1a;--c:#22e6ff;--m:#ff3fb4;--v:#8a5cff;--ok:#3dffa0;--r:#ff4b6e;--a:#ffc233;--t:#f1ecff;--mu:#9b92c4}
+html,body{overflow:auto;height:auto}
+body{background:radial-gradient(900px 500px at 10% -10%,#3a0f6a55,transparent),radial-gradient(700px 500px at 100% 0,#00e5ff22,transparent),var(--bg);color:var(--t);font-family:Inter,system-ui,sans-serif;padding-bottom:20px}
+header{padding:calc(14px + env(safe-area-inset-top)) 16px 4px;max-width:980px;margin:auto}
+header canvas{width:100%;height:56px;display:block;border-radius:12px}
+header h1{margin:10px 0 0;font-size:13px;letter-spacing:4px;color:var(--mu);font-weight:600}
+.bento{max-width:980px;margin:auto;padding:10px 16px 20px;display:grid;gap:10px;grid-template-columns:repeat(2,1fr)}
+@media(min-width:760px){.bento{grid-template-columns:repeat(4,1fr)}}
+.t{background:linear-gradient(160deg,#1a0f3acc,#0d0820cc);border:1px solid var(--ln);border-radius:18px;padding:14px;min-width:0;position:relative;overflow:hidden;backdrop-filter:blur(8px)}
+.t.w2{grid-column:span 2}.t.btn{cursor:pointer;text-align:left;color:inherit;font:inherit;min-height:150px}.t.btn:active{transform:scale(.98)}
+.t small{color:var(--mu);font-size:11px;letter-spacing:.8px;display:block;text-transform:uppercase}.big{font-size:30px;font-weight:800;font-variant-numeric:tabular-nums;margin:4px 0}
+.ok{color:var(--ok)}.bad{color:var(--r)}.t canvas{width:100%;height:44px;display:block;margin-top:6px}
+.t .st{position:absolute;right:12px;top:12px;width:10px;height:10px;border-radius:50%}
+.t.loss{border-color:#ff4b6e88;box-shadow:0 0 28px #ff4b6e22}.t.profit{box-shadow:0 0 28px #3dffa00f}
+.ring{width:90px;height:90px;display:block;margin:6px auto 0}
+.todo{border-color:#ffc23388}.todo button{margin-top:8px;background:var(--a);color:#000;border:0;border-radius:10px;padding:10px 14px;font-weight:700;min-height:42px}
+#modal{position:fixed;inset:0;background:#05020bcc;backdrop-filter:blur(10px);z-index:50;display:none;overflow:auto;padding:calc(16px + env(safe-area-inset-top)) 16px 30px}#modal.on{display:block}
+.pane{max-width:640px;margin:auto}.pane h2{margin:0 0 4px}.xbtn{float:right;background:#ffffff14;color:#fff;border:1px solid var(--ln);border-radius:12px;min-width:44px;min-height:44px;font-size:16px}
+.seg{display:flex;gap:6px;margin:12px 0;overflow-x:auto}.seg button{flex:none;background:none;border:1px solid var(--ln);color:var(--mu);border-radius:20px;padding:0 14px;min-height:40px}.seg button.on{background:var(--c);color:#001;border-color:var(--c);font-weight:700}
+.box{background:#ffffff0a;border:1px solid var(--ln);border-radius:14px;padding:12px;margin:8px 0;font-size:13px;line-height:1.5}
+.agent,.ev,.quest{padding:9px 0;border-top:1px solid var(--ln);font-size:12px}.agent .name{font-weight:700;color:var(--c)}.agent .meta,.agent .task{display:block;color:var(--mu)}.agent.st-blocked .task{color:var(--a)}
+.xp,.bar{display:block;height:5px;background:#ffffff1a;border-radius:3px;margin:4px 0}.xp u,.bar u{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,var(--v),var(--c))}
+.ev time{color:var(--m);margin-right:8px}.cb{display:grid;grid-template-columns:42px 1fr 52px;gap:6px;font-size:11px;align-items:center}
+.pb{background:linear-gradient(90deg,var(--v),var(--m));color:#fff;border:0;border-radius:12px;padding:11px 16px;font-weight:700;min-height:44px;margin-top:6px}.pb:disabled{opacity:.5}
+</style></head><body>
+<header><canvas id="sky"></canvas><h1>AUTONOMOUS TYCOON · DEMO DATA</h1></header>
+<div class="bento" id="b"></div>
+<div id="modal"><div class="pane" id="pane"></div></div>
+<script src="../shared/data.js"></script><script src="../shared/common.js"></script>
+<script>
+labChip(8);
+const S = { open: null, tab: 'why', done: new Set(), budget: D.budget.remaining };
+function tiles() {
+  const h = `<div class="t w2"><small>Net profit · 7 days</small><div class="big ${D.net >= 0 ? 'ok' : 'bad'}">${signed(D.net)}</div><small>${money(D.rev)} in · ${money(D.cost)} out</small><canvas data-n="1"></canvas></div>
+  <div class="t"><small>Budget left</small><div class="big">${money(S.budget, 0)}</div><small>of $100 bootstrap</small></div>
+  <div class="t"><small>Empire</small><canvas class="ring" id="ring"></canvas><small style="text-align:center">LV ${D.empire.level} · ${D.empire.xp}/${D.empire.next} XP</small></div>`;
+  const pend = D.approvalsPending.filter(p => !S.done.has(p.id));
+  const todo = `<div class="t w2 ${pend.length ? 'todo' : ''}"><small>Needs you · ${pend.length}</small>${pend.map(p => `<div style="margin-top:6px">${p.text}</div>`).join('') || '<div class="big ok" style="font-size:18px">All clear</div>'}${pend.length ? '<button data-modal="alerts">Review</button>' : ''}</div>`;
+  const bz = D.biz.map(b => `<button class="t btn ${b.status === 'loss' ? 'loss' : 'profit'}" data-biz="${b.id}"><span class="st" style="background:${b.status === 'loss' ? 'var(--r)' : b.status === 'watch' ? 'var(--a)' : 'var(--ok)'}"></span><small style="color:${b.color}">${b.name}</small><div class="big ${b.profit >= 0 ? 'ok' : 'bad'}">${signed(b.profit)}</div><small>ROI ${pct(b.roi)} · health ${b.health}%</small><canvas data-b="${b.id}"></canvas></button>`).join('');
+  const more = `<button class="t btn w2" data-modal="agents"><small>Agents · ${D.agents.filter(a => a.state === 'working').length} working</small><div class="big" style="font-size:20px">${D.supervisor.state}</div><small>Supervisor load ${pct(D.supervisor.load)}</small><canvas data-load="1"></canvas></button>
+  <button class="t btn" data-modal="quests"><small>Quests</small><div class="big">${D.quests.filter(q => q.prog >= q.goal).length}/${D.quests.length}</div><small>from real results</small></button>
+  <button class="t btn" data-modal="events"><small>Activity</small><div class="big">${D.events.length}</div><small>latest: ${D.events[0].t} ago</small></button>`;
+  $('#b').innerHTML = h + todo + bz + more;
+  $$('canvas[data-b]').forEach(c => { const b = bizById(c.dataset.b); spark(c, series(b), b.profit >= 0 ? '#3dffa0' : '#ff4b6e'); });
+  spark($('canvas[data-n]'), D.trend, '#22e6ff'); spark($('canvas[data-load]'), [.4, .5, .45, .6, .55, .62, D.supervisor.load], '#8a5cff');
+  const r = $('#ring'), x = r.getContext('2d'); r.width = r.height = 180; x.lineWidth = 14; x.strokeStyle = '#ffffff18'; x.beginPath(); x.arc(90, 90, 70, 0, 7); x.stroke(); const g = x.createLinearGradient(0, 0, 180, 180); g.addColorStop(0, '#8a5cff'); g.addColorStop(1, '#22e6ff'); x.strokeStyle = g; x.lineCap = 'round'; x.beginPath(); x.arc(90, 90, 70, -1.57, -1.57 + 6.28 * D.empire.xp / D.empire.next); x.stroke(); x.fillStyle = '#fff'; x.font = 'bold 40px system-ui'; x.textAlign = 'center'; x.fillText(D.empire.level, 90, 104);
+}
+function pane(html) { $('#pane').innerHTML = `<button class="xbtn" data-close>✕</button>${html}`; $('#modal').classList.add('on'); }
+function openBiz(id) {
+  const b = bizById(id); S.open = id;
+  const seg = [['why', 'Why'], ['cost', 'Costs'], ['agents', 'Agents'], ['up', 'Upgrades']];
+  const body = S.tab === 'why' ? `<div class="box"><b>Why this result</b><br>${b.why}</div><div class="box" style="border-color:#3dffa066"><b>Opportunity found</b><br>${b.opp}</div>${b.attention ? `<div class="box" style="border-color:#ffc23388"><b>Needs you</b><br>${b.attention}</div>` : ''}<div class="box">${b.headline} · queue ${b.queue}</div>` : S.tab === 'cost' ? `<div class="box">${costBars(b)}</div>` : S.tab === 'agents' ? `<div class="box">${D.agents.filter(a => a.biz === id).map(agentRow).join('') || 'Shared agents only.'}</div>` : D.upgrades.filter(u => u.biz === id).map(u => `<div class="box"><b>${u.name} · ${money(u.cost, 0)}</b><br>${u.effect}<br><small>payback ${u.payback}</small><br><button class="pb" data-buy="${u.id}" ${S.done.has(u.id) || u.cost > 25 ? 'disabled' : ''}>${S.done.has(u.id) ? 'Installed' : u.cost > 25 ? 'Needs your approval' : 'Install'}</button></div>`).join('');
+  pane(`<h2 style="color:${b.color}">${b.name}</h2><div class="big ${b.profit >= 0 ? 'ok' : 'bad'}">${signed(b.profit)}</div><div class="seg">${seg.map(([k, n]) => `<button data-tab="${k}" class="${S.tab === k ? 'on' : ''}">${n}</button>`).join('')}</div>${body}`);
+}
+document.addEventListener('click', e => { const t = e.target.closest('[data-biz],[data-modal],[data-close],[data-tab],[data-buy],[data-ok]'); if (!t) return; const d = t.dataset;
+  if (d.biz) { S.tab = 'why'; openBiz(d.biz); }
+  if (d.close !== undefined) { $('#modal').classList.remove('on'); S.open = null; tiles(); }
+  if (d.tab) { S.tab = d.tab; openBiz(S.open); }
+  if (d.buy) { const u = D.upgrades.find(x => x.id === d.buy); S.done.add(u.id); S.budget -= u.cost; openBiz(S.open); }
+  if (d.ok) { S.done.add(d.ok); d.ok === 'p1'; pane(`<h2>Needs you</h2>${alerts()}`); }
+  if (d.modal === 'agents') pane(`<h2>Agents</h2><div class="box"><b>${D.supervisor.state}</b><br>${D.supervisor.decisions.join('<br>')}</div><div class="box">${D.agents.map(agentRow).join('')}</div>`);
+  if (d.modal === 'quests') pane(`<h2>Quests</h2><div class="box">${D.quests.map(questRow).join('')}</div><h2 style="margin-top:14px">Upgrades</h2>${D.upgrades.map(u => `<div class="box"><b>${u.name} ${money(u.cost, 0)}</b> · ${bizById(u.biz).short}<br>${u.effect}</div>`).join('')}`);
+  if (d.modal === 'events') pane(`<h2>Activity</h2><div class="box">${D.events.map(eventRow).join('')}</div>`);
+  if (d.modal === 'alerts') pane(`<h2>Needs you</h2>${alerts()}`); });
+const alerts = () => D.approvalsPending.filter(p => !S.done.has(p.id)).map(p => `<div class="box"><b>${p.text}</b><br><small>${p.cost > 25 ? 'Over $25 — human approval required' : 'Confirm to proceed'}</small><br><button class="pb" data-ok="${p.id}">Approve</button></div>`).join('') || '<div class="box ok">All clear.</div>';
+// skyline strip: each tower = a business, height = revenue, glow = profit
+function sky(t) { const c = $('#sky'), x = c.getContext('2d'), dpr = 2, w = c.clientWidth, h = c.clientHeight; if (c.width !== w * dpr) { c.width = w * dpr; c.height = h * dpr; } x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, w, h);
+  for (let i = 0; i < 44; i++) { const bx = i / 44 * w, bh = 8 + hash(i, 3) * 26; x.fillStyle = '#1a0f3a'; x.fillRect(bx, h - bh, w / 44 - 1, bh); if (hash(i, 9) > .6 && (t / 700 + i) % 5 < 4) { x.fillStyle = '#8a5cff88'; x.fillRect(bx + 2, h - bh + 3, 2, 2); } }
+  D.biz.forEach((b, i) => { const bx = (i + .5) / 4 * w - 10, bh = 14 + b.rev * .9; x.save(); x.shadowColor = b.color; x.shadowBlur = 12; x.fillStyle = b.color + (b.profit >= 0 ? 'cc' : '55'); x.fillRect(bx, h - bh, 20, bh); x.restore(); }); requestAnimationFrame(sky); }
+tiles(); requestAnimationFrame(sky);
+</script></body></html>

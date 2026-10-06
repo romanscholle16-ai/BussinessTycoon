@@ -36,7 +36,7 @@ test('design lab is served and path traversal is blocked', async () => {
   await new Promise((r) => server.listen(0, '127.0.0.1', r));
   try {
     const { port } = server.address();
-    for (const p of ['/lab/', '/lab/c1/', '/lab/c2/', '/lab/c3/', '/lab/c4/', '/lab/c5/', '/lab/shared/data.js']) {
+    for (const p of ['/lab/', '/lab/c1/', '/lab/c2/', '/lab/c3/', '/lab/c4/', '/lab/c5/', '/lab/c6/', '/lab/c7/', '/lab/c8/', '/lab/c9/', '/lab/c10/', '/lab/shared/data.js']) {
       assert.equal((await fetch(`http://127.0.0.1:${port}${p}`)).status, 200, p);
     }
     const bad = await fetch(`http://127.0.0.1:${port}/..%2f..%2fpackage.json`);

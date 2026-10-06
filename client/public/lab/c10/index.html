@@ -1,0 +1,70 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Concept 10 – Pipeline Flow</title>
+<link rel="stylesheet" href="../shared/lab.css">
+<style>
+:root{--bg:#070a14;--p:#0d1222;--ln:#232c4a;--c:#2af0ff;--m:#ff2fa8;--ok:#42ff9c;--r:#ff4d6d;--a:#ffc13d;--t:#e7eeff;--mu:#7a88b3}
+html,body{overflow:auto;height:auto}
+body{background:var(--bg);color:var(--t);font-family:Inter,system-ui,sans-serif;padding-bottom:70px}
+.wrap{max-width:1000px;margin:auto;padding:calc(12px + env(safe-area-inset-top)) 12px 12px}
+h1{font-size:11px;letter-spacing:3px;color:var(--mu);margin:14px 0 8px;font-weight:600}
+.fun{display:flex;gap:2px;margin-bottom:6px}.fun div{flex:1;background:linear-gradient(#2af0ff22,#2af0ff08);border:1px solid var(--ln);padding:8px 6px;text-align:center;clip-path:polygon(0 0,92% 0,100% 50%,92% 100%,0 100%,8% 50%)}.fun b{display:block;font-size:17px}.fun small{color:var(--mu);font-size:9px;letter-spacing:.5px}
+.sum{display:flex;gap:10px;flex-wrap:wrap;align-items:baseline}.sum .big{font-size:28px;font-weight:800}.ok{color:var(--ok)}.bad{color:var(--r)}
+.scroll{overflow-x:auto;border:1px solid var(--ln);border-radius:12px;background:var(--p);-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;min-width:640px;width:100%}th{font-size:9px;letter-spacing:1px;color:var(--mu);padding:8px 4px;font-weight:600;border-bottom:1px solid var(--ln)}
+td{border-top:1px solid var(--ln);height:62px;text-align:center;position:relative;font-size:12px}td.nm{text-align:left;padding:6px 10px;min-width:112px;position:sticky;left:0;background:var(--p);z-index:2;cursor:pointer;border-right:1px solid var(--ln)}
+td.nm b{display:block;font-size:12px}td.nm small{font-weight:700}
+.cell{display:inline-block;min-width:34px;padding:4px 8px;border-radius:8px;background:#ffffff0c;border:1px solid var(--ln);font-weight:700;font-variant-numeric:tabular-nums}
+.cell.hot{border-color:var(--c);color:var(--c);box-shadow:0 0 12px #2af0ff44}.cell.stuck{border-color:var(--a);color:var(--a)}.cell.zero{opacity:.35}
+td .dot{position:absolute;top:50%;width:6px;height:6px;border-radius:50%;background:var(--c);box-shadow:0 0 8px var(--c);animation:mv 2.6s linear infinite}
+@keyframes mv{from{left:-4%}to{left:104%}}
+.drawer{position:fixed;left:0;right:0;bottom:56px;max-height:68%;overflow:auto;background:var(--p);border-top:1px solid var(--c);z-index:30;padding:14px;transform:translateY(120%);visibility:hidden;transition:transform .2s;border-radius:16px 16px 0 0}.drawer.on{transform:none;visibility:visible}
+@media(min-width:900px){.drawer{left:auto;width:380px;right:12px;bottom:70px;border:1px solid var(--c);border-radius:14px}}
+.drawer h2{margin:0 0 6px}.box{background:#ffffff0a;border-radius:10px;padding:10px;margin:8px 0;font-size:13px;line-height:1.5;border-left:3px solid var(--a)}.box.o{border-color:var(--ok)}
+.agent,.ev,.quest{padding:8px 0;border-top:1px solid var(--ln);font-size:12px}.agent .name{color:var(--c);font-weight:700}.agent .meta,.agent .task{display:block;color:var(--mu)}.agent.st-blocked .task{color:var(--a)}
+.xp,.bar{display:block;height:4px;background:var(--ln);border-radius:2px;margin:4px 0}.xp u,.bar u{display:block;height:100%;background:var(--c);border-radius:2px}.ev time{color:var(--m);margin-right:8px}.cb{display:grid;grid-template-columns:42px 1fr 50px;gap:6px;font-size:11px;align-items:center}
+.btn{background:var(--c);color:#001;border:0;border-radius:10px;padding:0 14px;min-height:42px;font-weight:700;margin:6px 6px 0 0}.btn.gh{background:none;color:var(--t);border:1px solid var(--ln)}.btn:disabled{opacity:.5}
+.x{float:right;background:none;border:1px solid var(--ln);color:var(--t);border-radius:10px;min-width:40px;min-height:38px}
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--p);border-top:1px solid var(--ln);z-index:40;padding-bottom:env(safe-area-inset-bottom)}nav button{flex:1;background:none;border:0;color:var(--mu);min-height:56px;font-size:11px}nav button.on{color:var(--c);box-shadow:inset 0 2px 0 var(--c)}
+.pg{display:none}.pg.on{display:block}.card{background:var(--p);border:1px solid var(--ln);border-radius:12px;padding:12px;margin-bottom:8px}
+</style></head><body>
+<div class="wrap">
+ <div class="pg on" id="p-pipe"><div class="sum"><span class="big" id="net"></span><span style="color:var(--mu)" id="sub"></span></div>
+  <h1>NETWORK FUNNEL · LAST 7 DAYS · DEMO</h1><div class="fun" id="fun"></div>
+  <h1>BUSINESS PIPELINES · TAP A ROW</h1><div class="scroll"><table id="tbl"></table></div>
+  <p style="color:var(--mu);font-size:11px">Numbers show items in each stage. <span style="color:var(--a)">Amber</span> = items waiting longer than usual. Glowing = active now.</p></div>
+ <div class="pg" id="p-money"><h1>PROFIT & LOSS</h1><div id="pl"></div><h1>UPGRADES</h1><div id="up"></div></div>
+ <div class="pg" id="p-agents"><h1>SUPERVISOR</h1><div class="card" id="sup"></div><h1>AGENTS</h1><div class="card" id="ag"></div></div>
+ <div class="pg" id="p-alerts"><h1>NEEDS YOU</h1><div id="al"></div><h1>QUESTS</h1><div class="card" id="q"></div><h1>TIMELINE</h1><div class="card" id="ev"></div></div>
+</div>
+<div class="drawer" id="dr"></div>
+<nav id="nav"><button data-p="pipe" class="on">PIPELINE</button><button data-p="money">MONEY</button><button data-p="agents">AGENTS</button><button data-p="alerts">ALERTS</button></nav>
+<script src="../shared/data.js"></script><script src="../shared/common.js"></script>
+<script>
+labChip(10);
+const STG = ['RESEARCH', 'CREATE', 'QA', 'PUBLISH', 'LIVE', 'OPTIMIZE'];
+// demo counts per stage (derived from queue sizes; DEMO DATA)
+const CNT = { etsy: [3, 4, 9, 2, 14, 3], assets: [2, 2, 1, 1, 3, 1], affiliate: [2, 1, 1, 1, 5, 2], fiverr: [1, 1, 0, 0, 2, 0] };
+const STUCK = { etsy: [2], assets: [], affiliate: [], fiverr: [3, 4] };
+const S = { sel: null, done: new Set(), inst: new Set() };
+function pipe() {
+  const t = STG.map((s, i) => D.biz.reduce((a, b) => a + CNT[b.id][i], 0));
+  $('#net').innerHTML = `<span class="${D.net >= 0 ? 'ok' : 'bad'}">${signed(D.net)}</span>`; $('#sub').textContent = `net profit · ${money(D.rev)} in · ${money(D.cost)} out · budget ${money(D.budget.remaining)}`;
+  $('#fun').innerHTML = STG.map((s, i) => `<div><b>${t[i]}</b><small>${s}</small></div>`).join('');
+  $('#tbl').innerHTML = `<tr><th style="text-align:left;padding-left:10px">BUSINESS</th>${STG.map(s => `<th>${s}</th>`).join('')}</tr>` + D.biz.map(b => `<tr>${`<td class="nm" data-b="${b.id}"><b style="color:${b.color}">${b.short}</b><small class="${b.profit >= 0 ? 'ok' : 'bad'}">${signed(b.profit)}</small></td>`}${CNT[b.id].map((n, i) => `<td><span class="cell ${n === 0 ? 'zero' : STUCK[b.id].includes(i) ? 'stuck' : (D.agents.some(a => a.biz === b.id && a.state === 'working') && i === 1) ? 'hot' : ''}">${n}</span>${n && i < 5 && b.status !== 'loss' ? `<span class="dot" style="animation-delay:${i * .4 + b.rev % 2}s"></span>` : ''}</td>`).join('')}</tr>`).join('');
+}
+function drawer() {
+  const d = $('#dr'); if (!S.sel) { d.classList.remove('on'); return; } const b = bizById(S.sel);
+  d.innerHTML = `<button class="x" data-x>✕</button><h2 style="color:${b.color}">${b.name}</h2><b class="${b.profit >= 0 ? 'ok' : 'bad'}">${signed(b.profit)}</b> · ROI ${pct(b.roi)} · health ${b.health}%<div class="box">Where it is stuck / why: ${b.why}</div><div class="box o">Opportunity: ${b.opp}</div>${b.attention ? `<div class="box">Needs you: ${b.attention}</div>` : ''}<b>Cost split</b>${costBars(b)}<br><b>Upgrades</b>${D.upgrades.filter(u => u.biz === b.id).map(u => `<div class="box o">${u.name} ${money(u.cost, 0)} — ${u.effect}<br><button class="btn" data-inst="${u.id}" ${S.inst.has(u.id) || u.cost > 25 ? 'disabled' : ''}>${S.inst.has(u.id) ? 'Installed' : u.cost > 25 ? 'Needs approval' : 'Install'}</button></div>`).join('')}<b>Agents</b>${D.agents.filter(a => a.biz === b.id).map(agentRow).join('') || '<br>Shared agents'}`;
+  d.classList.add('on');
+}
+function rest() {
+  $('#pl').innerHTML = D.biz.map(b => `<div class="card"><b style="color:${b.color}">${b.name}</b> <span class="${b.profit >= 0 ? 'ok' : 'bad'}">${signed(b.profit)}</span><br><small style="color:var(--mu)">${b.why}</small>${costBars(b)}</div>`).join('');
+  $('#up').innerHTML = D.upgrades.map(u => `<div class="card"><b>${u.name} · ${money(u.cost, 0)}</b> (${bizById(u.biz).short})<br>${u.effect} · payback ${u.payback}</div>`).join('');
+  $('#sup').innerHTML = `<b style="color:var(--c)">${D.supervisor.state}</b> · load ${pct(D.supervisor.load)}<br>${D.supervisor.decisions.join('<br>')}`; $('#ag').innerHTML = D.agents.map(agentRow).join('');
+  $('#al').innerHTML = D.approvalsPending.filter(p => !S.done.has(p.id)).map(p => `<div class="card" style="border-color:var(--a)">${p.text}<br><small>${p.cost > 25 ? 'Over $25: needs your approval' : 'Confirm'}</small><br><button class="btn" data-ok="${p.id}">Approve</button><button class="btn gh" data-ok="${p.id}">Deny</button></div>`).join('') || '<div class="card ok">All clear</div>';
+  $('#q').innerHTML = D.quests.map(questRow).join(''); $('#ev').innerHTML = D.events.map(eventRow).join('');
+}
+document.addEventListener('click', e => { const t = e.target, d = t.dataset, r = t.closest('[data-b]');
+  if (r) { S.sel = r.dataset.b; drawer(); } if (d.x !== undefined) { S.sel = null; drawer(); } if (d.inst) { S.inst.add(d.inst); drawer(); } if (d.ok) { S.done.add(d.ok); rest(); }
+  if (d.p) { $$('#nav button').forEach(b => b.classList.toggle('on', b === t)); $$('.pg').forEach(x => x.classList.toggle('on', x.id === 'p-' + d.p)); S.sel = null; drawer(); scrollTo(0, 0); } });
+pipe(); rest();
+</script></body></html>

@@ -7,7 +7,7 @@ Autonomous Tycoon — Windows-hosted autonomous-business platform with a 32-bit 
 - Current phase: **PHASE 0 — Foundation & Project Control**
 - Completed phases: PHASE 0 (reviewed and accepted by the user)
 - Phase 0 status: **COMPLETE** (branch `claude/autonomous-tycoon-phase-0-fur6cl`)
-- Phase 1: **IN PROGRESS — stopped at DESIGN-SELECTION GATE.** Five prototypes built (see DESIGN_LAB.md); user has NOT chosen. Do not lock a design, polish one concept, or make the final Phase 1 commit until the user chooses.
+- Phase 1: **IN PROGRESS — stopped at DESIGN-SELECTION GATE.** Ten prototypes built in two rounds (see DESIGN_LAB.md); user has NOT chosen. Do not lock a design, polish one concept, or make the final Phase 1 commit until the user chooses.
 - Next step: wait for the user's choice (1–5, a combination, or modifications), then complete Phase 1 on that direction
 
 ## Architecture status

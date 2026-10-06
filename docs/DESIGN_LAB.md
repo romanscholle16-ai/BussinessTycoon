@@ -2,7 +2,7 @@
 
 **Status: AWAITING USER DECISION. No design is selected or locked.**
 
-Five playable prototypes in `client/public/lab/` (served by `npm start` at `http://127.0.0.1:8787/lab/`; for a phone on the LAN set `TYCOON_HOST=0.0.0.0`). All use DEMO DATA (`lab/shared/data.js`), clearly labeled; nothing is real revenue. Prototype code is throwaway-quality and will be replaced once a direction is chosen.
+Ten playable prototypes (round 1: #1–5, round 2 requested by user: #6–10, modern cyberpunk with simple but informative workspace/dashboard) in `client/public/lab/` (served by `npm start` at `http://127.0.0.1:8787/lab/`; for a phone on the LAN set `TYCOON_HOST=0.0.0.0`). All use DEMO DATA (`lab/shared/data.js`), clearly labeled; nothing is real revenue. Prototype code is throwaway-quality and will be replaced once a direction is chosen.
 
 | # | Concept | Core metaphor | Main interaction |
 |---|---|---|---|
@@ -24,3 +24,14 @@ Combination **4 + 5**, with **3's money-flow roads** as an optional map layer: a
 
 ## Design principles carried by every concept
 Progress reflects real measured results only; no fake sales/profits; spend tiers ($0–5 auto, $5–25 within rules, $25+ human) are visible; items needing a human are surfaced; game score must never trade off against business performance.
+
+## Round 2 (concepts 6–10): modern cyberpunk workspaces
+| # | Concept | Core idea | Strength | Weakness |
+|---|---|---|---|---|
+| 6 | Neon Workspace | Sidebar nav, KPI cards with sparklines, "needs you" list, business inspector (side panel on desktop, bottom sheet on phone) | Most familiar, easiest to scan; why/costs/agents/upgrades one tap away | Least game-like |
+| 7 | Terminal Ops | Pinned per-business profit meters + command console with tap-chips (status, biz, queue, approve, install) | Fastest for power use; every action is auditable text | Typing on phone; niche feel |
+| 8 | Bento Grid | Glass tiles with sparklines, neon skyline strip, full-screen detail panels | Best glanceability and polish on phones | Detail is one tap deeper |
+| 9 | Iso Command HUD | Pannable isometric city, tower height=revenue, glow=profit, HUD KPIs + inspector | Strongest map+data hybrid | Needs more taps for lists |
+| 10 | Pipeline Flow | Funnel and per-business stage table (Research→Create→QA→Publish→Live→Optimize) with stuck-stage highlighting | Shows *where* work is blocked, an efficiency view no other concept has | Not a world; less tycoon charm |
+
+Updated recommendation: dashboard of **6 or 8** as the default home, with **9** as the world view and **10**'s pipeline as the efficiency tab. Still a recommendation only; the user decides.

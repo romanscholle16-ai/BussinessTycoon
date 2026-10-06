@@ -1,0 +1,56 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Concept 7 – Terminal Ops</title>
+<link rel="stylesheet" href="../shared/lab.css">
+<style>
+:root{--bg:#04050a;--ln:#1b2338;--c:#19f0ff;--m:#ff3df0;--g:#7dff4d;--a:#ffb000;--r:#ff4560;--t:#cfe3ff;--mu:#5d6f94}
+body{background:var(--bg);color:var(--t);font-size:13px}
+#app{display:flex;flex-direction:column;height:100%}
+.topbar{display:flex;gap:10px;align-items:center;padding:6px 10px;padding-top:calc(6px + env(safe-area-inset-top));border-bottom:1px solid var(--ln);color:var(--mu);font-size:11px;padding-right:90px;white-space:nowrap;overflow:hidden}
+.topbar b{color:var(--c)}.up{color:var(--g)}.dn{color:var(--r)}
+#pin{border-bottom:1px solid var(--ln);padding:6px 10px;display:grid;gap:3px}
+.pr{display:grid;grid-template-columns:54px 1fr 64px 52px;gap:8px;align-items:center;min-height:30px;cursor:pointer;padding:0 4px}.pr:active,.pr.on{background:#19f0ff14}
+.meter{height:8px;background:var(--ln);position:relative}.meter u{position:absolute;left:0;top:0;bottom:0;display:block}
+#out{flex:1;overflow:auto;padding:10px;font-size:12px;line-height:1.5}
+.blk{margin-bottom:12px;border-left:2px solid var(--ln);padding-left:8px}.cmd{color:var(--m)}.cmd::before{content:'> ';color:var(--c)}
+.tb{width:100%;border-collapse:collapse;margin-top:4px}.tb td,.tb th{padding:3px 6px 3px 0;text-align:left;font-weight:normal;vertical-align:top}.tb th{color:var(--mu)}
+.log{color:var(--mu)}.log b{color:var(--c)}.k-warn{color:var(--a)}
+.agent,.ev,.quest{padding:3px 0}.agent .name{color:var(--c)}.agent .meta,.agent .task{display:block;color:var(--mu)}.xp{display:none}.ev time{color:var(--mu);margin-right:8px}.quest b{color:var(--g)}.quest span,.quest em{display:block;color:var(--mu);font-style:normal}.quest .bar{display:none}
+.cb{display:grid;grid-template-columns:48px 1fr 54px;gap:6px}.cb .bar{display:block;height:6px;background:var(--ln);padding:0;border:0;margin-top:5px}.cb .bar u{display:block;height:100%;background:var(--c)}
+#chips{display:flex;gap:6px;overflow-x:auto;padding:6px 8px;border-top:1px solid var(--ln);-webkit-overflow-scrolling:touch}
+#chips button{flex:none;background:#0a1224;color:var(--c);border:1px solid #19f0ff55;padding:0 12px;min-height:40px;font-size:12px}
+#chips button.hot{border-color:var(--a);color:var(--a)}
+form{display:flex;border-top:1px solid var(--ln);padding-bottom:env(safe-area-inset-bottom)}form span{padding:12px 8px 0 10px;color:var(--c)}
+input{flex:1;background:none;border:0;color:var(--t);font:inherit;font-size:16px;min-height:44px;outline:none}
+</style></head><body>
+<div id="app"><div class="topbar"><b>TYCOON//OPS</b><span id="clk"></span><span id="net"></span><span id="bud"></span></div><div id="pin"></div><div id="out"></div><div id="chips"></div>
+<form id="f"><span>&gt;</span><input id="in" autocomplete="off" autocapitalize="off" placeholder="type: help"></form></div>
+<script src="../shared/data.js"></script><script src="../shared/common.js"></script>
+<script>
+labChip(7);
+const S = { budget: D.budget.remaining, pend: [...D.approvalsPending], inst: new Set(), hist: [] };
+const mx = Math.max(...D.biz.map(b => Math.max(b.rev, b.cost)));
+function head() { $('#net').innerHTML = `NET <span class="${D.net >= 0 ? 'up' : 'dn'}">${signed(D.net)}</span>`; $('#bud').textContent = 'BUDGET ' + money(S.budget); $('#clk').textContent = 'DEMO'; $('#chips').innerHTML = ['status', 'biz etsy', 'biz fiverr', 'agents', 'money', 'queue', 'upgrades', 'quests', 'log', 'help'].map(c => `<button data-c="${c}" class="${c === 'queue' && S.pend.length ? 'hot' : ''}">${c === 'queue' && S.pend.length ? 'queue (' + S.pend.length + ')' : c}</button>`).join('');
+  $('#pin').innerHTML = D.biz.map(b => `<div class="pr" data-c="biz ${b.id}"><b style="color:${b.color}">${b.short}</b><div class="meter"><u style="width:${b.rev / mx * 50}%;background:var(--g)"></u><u style="left:auto;right:0;width:${b.cost / mx * 50}%;background:var(--r)"></u></div><span class="${b.profit >= 0 ? 'up' : 'dn'}" style="text-align:right">${signed(b.profit)}</span><span style="color:var(--mu);text-align:right">${pct(b.roi)}</span></div>`).join(''); }
+const tb = rows => `<table class="tb">${rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('')}</table>`;
+const C = {
+  help: () => tb([['status', 'enterprise summary'], ['biz &lt;id&gt;', 'etsy | assets | affiliate | fiverr'], ['agents', 'roster and what each is doing'], ['money', 'P&amp;L and cost split'], ['queue', 'items awaiting you (approve &lt;id&gt; / deny &lt;id&gt;)'], ['upgrades', 'ranked by payback (install &lt;id&gt;)'], ['quests', 'goals tied to real results'], ['log', 'event timeline']]),
+  status: () => tb([['Net profit 7d', `<span class="${D.net >= 0 ? 'up' : 'dn'}">${signed(D.net)}</span>`], ['Revenue / cost', `${money(D.rev)} / ${money(D.cost)}`], ['Budget', money(S.budget) + ' of $100'], ['Supervisor', D.supervisor.state], ['Health', Object.entries(D.health).map(([k, v]) => k + ':' + v).join(' ')], ['Needs you', S.pend.length + ' item(s)  → queue'], ['Empire', `LV ${D.empire.level}  ${D.empire.xp}/${D.empire.next} XP`]]),
+  biz: id => { const b = bizById(id); if (!b) return 'usage: biz etsy|assets|affiliate|fiverr'; return `<b style="color:${b.color}">${b.name}</b> — ${b.headline}` + tb([['rev/cost', `${money(b.rev)} / ${money(b.cost)}`], ['profit', `<span class="${b.profit >= 0 ? 'up' : 'dn'}">${signed(b.profit)}</span>  ROI ${pct(b.roi)}`], ['health', b.health + '%  queue ' + b.queue], ['why', b.why], ['opportunity', `<span class="up">${b.opp}</span>`], ['attention', b.attention || '—']]) + costBars(b); },
+  agents: () => D.agents.map(agentRow).join(''), money: () => D.biz.map(b => `<b style="color:${b.color}">${b.short}</b> <span class="${b.profit >= 0 ? 'up' : 'dn'}">${signed(b.profit)}</span>${costBars(b)}`).join('<br>'),
+  queue: () => S.pend.length ? S.pend.map(p => `[${p.id}] ${p.text} <span class="k-warn">(${p.cost > 25 ? 'needs human' : 'confirm'})</span> <button data-c="approve ${p.id}" style="min-height:36px;background:none;color:var(--g);border:1px solid var(--g)">approve</button> <button data-c="deny ${p.id}" style="min-height:36px;background:none;color:var(--r);border:1px solid var(--r)">deny</button>`).join('<br>') : '<span class="up">queue empty</span>',
+  approve: id => { const p = S.pend.find(x => x.id === id); if (!p) return 'no such item'; S.pend = S.pend.filter(x => x !== p); S.budget -= p.cost; return `<span class="up">approved</span> ${p.text} (logged to audit trail)`; },
+  deny: id => { const p = S.pend.find(x => x.id === id); if (!p) return 'no such item'; S.pend = S.pend.filter(x => x !== p); return 'denied: ' + p.text; },
+  upgrades: () => D.upgrades.map(u => `[${u.id}] ${u.name} ${money(u.cost, 0)} · ${u.effect} · payback ${u.payback} ${S.inst.has(u.id) ? '<span class="up">installed</span>' : u.cost > 25 ? '<span class="k-warn">needs approval</span>' : `<button data-c="install ${u.id}" style="min-height:34px;background:none;color:var(--c);border:1px solid var(--c)">install</button>`}`).join('<br>'),
+  install: id => { const u = D.upgrades.find(x => x.id === id); if (!u) return 'no such upgrade'; if (u.cost > 25) return 'cost over $25: sent to queue'; if (u.cost > S.budget) return 'insufficient budget'; S.inst.add(id); S.budget -= u.cost; return `<span class="up">installed</span> ${u.name} — expected: ${u.effect}`; },
+  quests: () => D.quests.map(questRow).join(''), log: () => D.events.map(eventRow).join(''),
+};
+function run(line, quiet) {
+  const [c, ...a] = line.trim().split(/\s+/); if (!c) return; const fn = C[c.toLowerCase()];
+  const o = $('#out'), d = document.createElement('div'); d.className = 'blk'; d.innerHTML = `<div class="cmd">${line.replace(/</g, '&lt;')}</div>${fn ? fn(a[0]) : `unknown command: ${c.replace(/</g, '&lt;')} (try help)`}`; o.appendChild(d); o.scrollTop = o.scrollHeight; head();
+}
+$('#f').onsubmit = e => { e.preventDefault(); run($('#in').value); $('#in').value = ''; };
+document.addEventListener('click', e => { const b = e.target.closest('[data-c]'); if (b) run(b.dataset.c); });
+head(); run('status'); run('queue');
+// simulated live feed (DEMO)
+const feed = ['Scout-01 scored 3 new niches', 'Guard-03 passed 2 designs', 'Lens-07 logged 14 clicks', 'Ledger-10 reconciled ledger', 'Aegis-12 scanned listings: clean']; let fi = 0;
+setInterval(() => { const o = $('#out'), d = document.createElement('div'); d.className = 'log'; d.innerHTML = `<b>[demo-feed]</b> ${feed[fi++ % feed.length]}`; o.appendChild(d); }, 6000);
+</script></body></html>

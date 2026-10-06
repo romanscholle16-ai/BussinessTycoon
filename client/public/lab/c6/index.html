@@ -1,0 +1,81 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Concept 6 – Neon Workspace</title>
+<link rel="stylesheet" href="../shared/lab.css">
+<style>
+:root{--bg:#06070f;--p:#0e1020;--p2:#141830;--ln:#262c52;--c:#00e5ff;--m:#ff2bd6;--g:#39ff88;--a:#ffb700;--r:#ff3860;--t:#e6eaff;--mu:#7f88b8}
+body{background:var(--bg);color:var(--t);font-family:Inter,system-ui,sans-serif}
+#app{display:grid;height:100%;grid-template-columns:1fr;grid-template-rows:1fr auto}
+@media(min-width:900px){#app{grid-template-columns:72px 1fr 340px;grid-template-rows:1fr}}
+nav{display:flex;background:var(--p);border-top:1px solid var(--ln);padding-bottom:env(safe-area-inset-bottom);order:2}
+@media(min-width:900px){nav{flex-direction:column;border-top:0;border-right:1px solid var(--ln);order:0;padding-top:12px}}
+nav button{flex:1;background:none;border:0;color:var(--mu);min-height:56px;font-size:10px;letter-spacing:.5px}nav button b{display:block;font-size:19px;font-weight:400}
+nav button.on{color:var(--c);box-shadow:inset 0 2px 0 var(--c);background:linear-gradient(#00e5ff12,transparent)}
+@media(min-width:900px){nav button{flex:0 0 64px;box-shadow:none!important}nav button.on{box-shadow:inset 2px 0 0 var(--c)!important}}
+main{overflow:auto;padding:12px;padding-top:calc(12px + env(safe-area-inset-top))}
+h1{font-size:12px;letter-spacing:3px;color:var(--mu);margin:2px 0 10px;font-weight:600}
+.row{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:12px}
+.card{background:var(--p);border:1px solid var(--ln);border-radius:12px;padding:12px;position:relative;min-width:0}
+.card small{color:var(--mu);font-size:11px;letter-spacing:.5px;display:block}.card .v{font-size:24px;font-weight:700;margin:2px 0;font-variant-numeric:tabular-nums}
+.card canvas{width:100%;height:34px;display:block}
+.up{color:var(--g)}.dn{color:var(--r)}.cy{color:var(--c)}
+.glow{box-shadow:0 0 0 1px #00e5ff33,0 0 24px #00e5ff14}
+.bz{display:grid;grid-template-columns:8px 1fr auto;gap:10px;align-items:center;padding:12px;background:var(--p);border:1px solid var(--ln);border-radius:12px;margin-bottom:8px;cursor:pointer;min-height:64px}
+.bz.on{border-color:var(--c);background:var(--p2)}.bz i{width:8px;height:40px;border-radius:4px}.bz b{display:block}.bz small{color:var(--mu)}.bz .n{text-align:right;font-weight:700}
+.chip{display:inline-block;font-size:10px;padding:2px 8px;border-radius:10px;border:1px solid var(--ln);color:var(--mu);margin-right:4px}
+.chip.w{color:var(--a);border-color:#ffb70066}.chip.d{color:var(--r);border-color:#ff386066}.chip.g{color:var(--g);border-color:#39ff8866}
+.attn{border-left:3px solid var(--a);background:#ffb70010;padding:10px;border-radius:0 8px 8px 0;margin-bottom:8px;font-size:13px}.attn button{margin-top:6px}
+button.pb{background:var(--c);color:#001;border:0;border-radius:8px;padding:9px 14px;min-height:40px;font-weight:700}button.gh{background:none;color:var(--t);border:1px solid var(--ln);border-radius:8px;padding:9px 12px;min-height:40px}
+aside{background:var(--p);border-left:1px solid var(--ln);overflow:auto;padding:14px;display:none}
+@media(min-width:900px){aside{display:block}}
+aside.sheet{display:block;position:fixed;left:0;right:0;bottom:57px;max-height:70%;z-index:30;border-left:0;border-top:1px solid var(--c);border-radius:14px 14px 0 0;box-shadow:0 -10px 40px #000}
+@media(min-width:900px){aside.sheet{position:static;max-height:none;box-shadow:none;border-radius:0;border-top:0}}
+aside h2{margin:0 0 8px;font-size:16px}.tabs{display:flex;gap:4px;margin:8px 0}.tabs button{flex:1;background:none;border:1px solid var(--ln);color:var(--mu);border-radius:8px;min-height:36px;font-size:12px}.tabs button.on{color:var(--c);border-color:var(--c)}
+.agent,.ev,.quest{padding:9px 0;border-top:1px solid var(--ln);font-size:12px}.agent .name{font-weight:700;color:var(--c)}.agent .meta,.agent .task{display:block;color:var(--mu)}.agent.st-blocked .task{color:var(--a)}
+.xp,.bar{display:block;height:4px;background:var(--ln);border-radius:2px;margin:4px 0}.xp u,.bar u{display:block;height:100%;background:var(--c);border-radius:2px}
+.ev time{color:var(--m);margin-right:8px}.cb{display:grid;grid-template-columns:42px 1fr 50px;gap:6px;font-size:11px;align-items:center}
+.why{font-size:13px;line-height:1.5;color:var(--t);background:var(--p2);border-radius:8px;padding:10px;margin:8px 0}
+.x{float:right;background:none;border:1px solid var(--ln);color:var(--t);border-radius:8px;min-width:36px;min-height:34px}
+</style></head><body>
+<div id="app"><nav id="nav"></nav><main id="main"></main><aside id="insp"></aside></div>
+<script src="../shared/data.js"></script><script src="../shared/common.js"></script>
+<script>
+labChip(6);
+const V = [['home', '◈', 'HOME'], ['biz', '▦', 'BUSINESS'], ['agents', '⚙', 'AGENTS'], ['money', '$', 'MONEY'], ['log', '≡', 'ACTIVITY']];
+const S = { v: 'home', sel: null, tab: 'why', done: new Set(), isSheet: false };
+$('#nav').innerHTML = V.map(([k, i, n]) => `<button data-v="${k}"><b>${i}</b>${n}</button>`).join('');
+$('#nav').onclick = e => { const b = e.target.closest('button'); if (b) { S.v = b.dataset.v; S.sel = S.v === 'biz' && !S.sel ? 'etsy' : S.sel; render(); } };
+const st = b => b.status === 'loss' ? ['LOSING', 'd'] : b.status === 'watch' ? ['WATCH', 'w'] : ['HEALTHY', 'g'];
+function kpi(k, v, c, d) { return `<div class="card glow"><small>${k}</small><div class="v ${c || ''}">${v}</div>${d ? '<canvas data-s="' + d + '"></canvas>' : ''}</div>`; }
+function bz(b) { const [t, c] = st(b); return `<div class="bz ${S.sel === b.id ? 'on' : ''}" data-id="${b.id}"><i style="background:${b.color};box-shadow:0 0 10px ${b.color}"></i><div><b>${b.name}</b><small>${b.headline}</small><br><span class="chip ${c}">${t}</span><span class="chip">ROI ${pct(b.roi)}</span></div><div class="n ${b.profit >= 0 ? 'up' : 'dn'}">${signed(b.profit)}<canvas data-b="${b.id}" style="width:70px;height:24px;display:block"></canvas></div></div>`; }
+function home() {
+  const burn = D.cost / 7;
+  return `<h1>OVERVIEW · DEMO DATA</h1><div class="row">${kpi('NET PROFIT 7D', signed(D.net), D.net >= 0 ? 'up' : 'dn', 'net')}${kpi('REVENUE', money(D.rev), 'cy')}${kpi('BUDGET LEFT', money(D.budget.remaining), '')}${kpi('RUNWAY', Math.round(D.budget.remaining / burn) + ' days', 'cy')}</div>
+  <h1>NEEDS YOU</h1>${D.approvalsPending.filter(p => !S.done.has(p.id)).map(p => `<div class="attn">${p.text}<br><small>${p.cost > 25 ? 'Over $25: human approval required' : 'Awaiting confirmation'}</small><br><button class="pb" data-ok="${p.id}">Approve</button> <button class="gh" data-no="${p.id}">Deny</button></div>`).join('') || '<div class="chip g">All clear</div>'}
+  <h1>BUSINESSES</h1>${D.biz.map(bz).join('')}
+  <h1>SUPERVISOR</h1><div class="card"><b class="cy">${D.supervisor.state}</b> · load ${pct(D.supervisor.load)}${D.supervisor.decisions.map(d => `<div class="ev">${d}</div>`).join('')}</div>`;
+}
+function view() {
+  if (S.v === 'home') return home();
+  if (S.v === 'biz') return `<h1>BUSINESSES</h1>${D.biz.map(bz).join('')}<h1>OPPORTUNITIES</h1>${D.biz.map(b => `<div class="why"><b style="color:${b.color}">${b.short}</b> ${b.opp}</div>`).join('')}`;
+  if (S.v === 'agents') return `<h1>AGENTS · ${D.agents.length}</h1><div class="card">${D.agents.map(agentRow).join('')}</div>`;
+  if (S.v === 'money') return `<h1>FINANCE · 7D</h1><div class="row">${kpi('REVENUE', money(D.rev), 'cy')}${kpi('COSTS', money(D.cost), 'dn')}${kpi('NET', signed(D.net), 'up')}</div>${D.biz.map(b => `<div class="card" style="margin-bottom:8px"><b style="color:${b.color}">${b.name}</b> <span class="${b.profit >= 0 ? 'up' : 'dn'}">${signed(b.profit)}</span>${costBars(b)}</div>`).join('')}<h1>UPGRADES BY PAYBACK</h1>${D.upgrades.map(u => `<div class="card" style="margin-bottom:8px"><b>${u.name}</b> · ${money(u.cost, 0)}<br><small>${u.effect} · payback ${u.payback}</small></div>`).join('')}`;
+  return `<h1>ACTIVITY</h1><div class="card">${D.events.map(eventRow).join('')}</div><h1>QUESTS</h1><div class="card">${D.quests.map(questRow).join('')}</div>`;
+}
+function insp() {
+  const a = $('#insp'); if (!S.sel) { a.className = ''; a.innerHTML = '<h2 class="cy">Inspector</h2><p style="color:var(--mu)">Select a business to see why it performs the way it does.</p>'; return; }
+  const b = bizById(S.sel); const [t, c] = st(b); a.className = S.isSheet ? 'sheet' : '';
+  const body = S.tab === 'why' ? `<div class="why"><b>Why</b><br>${b.why}</div><div class="why" style="border-left:3px solid var(--g)"><b>Opportunity</b><br>${b.opp}</div>${b.attention ? `<div class="attn">${b.attention}</div>` : ''}` : S.tab === 'cost' ? costBars(b) : S.tab === 'agents' ? D.agents.filter(x => x.biz === b.id).map(agentRow).join('') || 'Uses shared agents.' : D.upgrades.filter(u => u.biz === b.id).map(u => `<div class="why"><b>${u.name} ${money(u.cost, 0)}</b><br>${u.effect}<br><button class="pb" data-buy="${u.id}" ${u.cost > 25 || S.done.has(u.id) ? 'disabled' : ''}>${S.done.has(u.id) ? 'Installed' : u.cost > 25 ? 'Needs approval' : 'Install'}</button></div>`).join('');
+  a.innerHTML = `<button class="x" data-close>✕</button><h2 style="color:${b.color}">${b.name}</h2><span class="chip ${c}">${t}</span><span class="chip">${signed(b.profit)}</span><span class="chip">health ${b.health}%</span><div class="tabs">${[['why', 'Why'], ['cost', 'Costs'], ['agents', 'Agents'], ['up', 'Upgrade']].map(([k, n]) => `<button data-tab="${k}" class="${S.tab === k ? 'on' : ''}">${n}</button>`).join('')}</div>${body}`;
+}
+function render() {
+  S.isSheet = innerWidth < 900 && !!S.sel && S.v !== 'agents';
+  $$('#nav button').forEach(b => b.classList.toggle('on', b.dataset.v === S.v)); $('#main').innerHTML = view(); insp();
+  $$('canvas[data-b]').forEach(c => { const b = bizById(c.dataset.b); spark(c, series(b), b.profit >= 0 ? '#39ff88' : '#ff3860'); });
+  $$('canvas[data-s=net]').forEach(c => spark(c, D.trend, '#39ff88'));
+}
+document.addEventListener('click', e => { const t = e.target;
+  const bz = t.closest('.bz'); if (bz) { S.sel = bz.dataset.id; S.tab = 'why'; render(); return; }
+  if (t.dataset.ok || t.dataset.no) { S.done.add(t.dataset.ok || t.dataset.no); render(); }
+  if (t.dataset.tab) { S.tab = t.dataset.tab; insp(); } if (t.dataset.close !== undefined) { S.sel = null; render(); }
+  if (t.dataset.buy) { S.done.add(t.dataset.buy); insp(); } });
+addEventListener('resize', render); render();
+</script></body></html>

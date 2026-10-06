@@ -147,7 +147,7 @@
   "deferred": [],
   "designGate": {
     "status": "awaiting_user_choice",
-    "prototypes": 5,
+    "prototypes": 10,
     "path": "client/public/lab/"
   }
 }
