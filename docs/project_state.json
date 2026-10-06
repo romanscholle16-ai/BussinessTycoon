@@ -1,7 +1,7 @@
 {
   "project": "Autonomous Tycoon",
-  "currentPhase": 0,
-  "phaseStatus": "complete",
+  "currentPhase": 1,
+  "phaseStatus": "in_progress_design_gate",
   "completedPhases": [
     0
   ],
@@ -15,7 +15,7 @@
     {
       "id": 1,
       "name": "Game Client",
-      "status": "not_started"
+      "status": "in_progress"
     },
     {
       "id": 2,
@@ -144,5 +144,10 @@
   },
   "lastCommit": "see git log",
   "blocked": [],
-  "deferred": []
+  "deferred": [],
+  "designGate": {
+    "status": "awaiting_user_choice",
+    "prototypes": 5,
+    "path": "client/public/lab/"
+  }
 }

@@ -1,0 +1,115 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Concept 5 – Living Empire</title>
+<link rel="stylesheet" href="../shared/lab.css">
+<style>
+body{background:#16222b;color:#fff4dc}
+#w{position:absolute;inset:0;width:100%;height:100%}
+.top{position:absolute;top:calc(4px + env(safe-area-inset-top));left:4px;right:84px;z-index:5;pointer-events:none}
+.era{background:#2b1a0ee6;border:3px solid #ffcf5c;padding:5px 8px;font-size:11px;border-radius:4px}.era b{color:#ffcf5c}.era .bar{height:8px;background:#000;border:1px solid #ffcf5c88;margin-top:3px}.era .bar u{display:block;height:100%;background:#ffcf5c}
+.stats{display:flex;gap:4px;margin-top:4px}.stats div{background:#2b1a0ecc;border:2px solid #8a6a3a;padding:3px 7px;font-size:11px}.stats b{display:block;font-size:14px}.pos{color:#8aff7a}.neg{color:#ff7a7a}
+.story{position:absolute;left:4px;right:4px;bottom:calc(62px + env(safe-area-inset-bottom));background:#2b1a0eee;border:2px solid #8a6a3a;padding:6px 10px;font-size:12px;z-index:5;border-radius:4px;pointer-events:none;min-height:30px}
+nav{position:absolute;bottom:0;left:0;right:0;display:flex;background:#2b1a0e;border-top:3px solid #ffcf5c;z-index:20;padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;background:none;border:0;color:#c9a971;min-height:54px;font-size:11px;position:relative}nav button span{display:block;font-size:20px}nav button.on{color:#ffcf5c;background:#ffffff12}
+nav i{position:absolute;top:4px;right:22%;background:#ff4d4d;color:#fff;border-radius:9px;font-style:normal;font-size:10px;padding:1px 5px}
+.sheet{position:absolute;left:0;right:0;bottom:56px;max-height:68%;background:#241508f8;border-top:3px solid #ffcf5c;z-index:15;overflow:auto;padding:12px;transform:translateY(120%);transition:transform .2s;visibility:hidden}
+.sheet.open{transform:none;visibility:visible}.sheet h2{margin:0 0 6px;font-size:15px;color:#ffcf5c}.sheet .x{position:absolute;right:8px;top:8px;background:#7a2a2a;color:#fff;border:0;min-width:40px;min-height:36px;border-radius:4px}
+.kv{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0}.kv div{background:#0005;border:1px solid #8a6a3a;padding:6px;font-size:10px;color:#c9a971}.kv b{display:block;font-size:15px;color:#fff4dc}
+.box{background:#0005;border-left:4px solid #ffcf5c;padding:7px 9px;margin:6px 0;font-size:12px}.box.o{border-color:#8aff7a}.box.w{border-color:#ff7a7a}
+.btn{background:#ffcf5c;color:#2b1a0e;border:0;border-radius:4px;padding:10px 14px;min-height:42px;font-weight:bold;margin:6px 6px 0 0;box-shadow:0 3px 0 #8a6a3a}
+.agent,.ev,.quest,.ms{font-size:12px;padding:7px 0;border-top:1px solid #ffffff1c}.agent .name{color:#7fe0ff}.agent .meta,.agent .task{display:block;color:#c9a971}.xp,.bar{display:block;height:5px;background:#0006;margin:3px 0}.xp u,.bar u{display:block;height:100%;background:#8aff7a}
+.ev time{color:#ffcf5c;margin-right:8px}.cb{display:grid;grid-template-columns:44px 1fr 50px;gap:6px;font-size:11px}
+.disc{border:2px solid #b07cff;background:#2a1650;padding:9px;margin:8px 0;font-size:12px;border-radius:4px}.disc.done{opacity:.6;border-color:#8aff7a}
+.ui{position:absolute;right:6px;top:calc(46px + env(safe-area-inset-top));display:flex;flex-direction:column;gap:6px;z-index:6}.ui button{width:44px;height:44px;border-radius:6px;background:#2b1a0e;color:#ffcf5c;border:2px solid #ffcf5c;font-size:20px}
+#cele{position:absolute;inset:0;z-index:40;display:none;place-items:center;background:#000a;text-align:center}#cele.on{display:grid}#cele div{background:#2b1a0e;border:4px solid #ffcf5c;padding:22px;max-width:86%}#cele h1{margin:0 0 6px;color:#ffcf5c;font-size:20px}
+</style></head><body>
+<canvas id="w"></canvas>
+<div class="top"><div class="era" id="era"></div><div class="stats" id="stats"></div></div>
+<div class="ui"><button id="zi">+</button><button id="zo">−</button><button id="zc">⌖</button></div>
+<div class="story" id="story"></div>
+<div class="sheet" id="sheet"></div>
+<div id="cele"><div><h1 id="ct"></h1><p id="cp"></p><button class="btn" id="cb">NICE!</button></div></div>
+<nav id="nav"><button data-t="map" class="on"><span>🏰</span>EMPIRE</button><button data-t="crew"><span>🧑‍🔧</span>CREW</button><button data-t="disc"><span>💎</span>FINDS<i id="nd"></i></button><button data-t="time"><span>📖</span>STORY</button></nav>
+<script src="../shared/data.js"></script><script src="../shared/common.js"></script>
+<script>
+labChip(5);
+const T = 16, P = { hq: [0, 0], etsy: [-120, -80], assets: [120, -80], affiliate: [-120, 80], fiverr: [120, 80] };
+const S = { sel: null, nav: 'map', tier: Object.fromEntries(D.biz.map(b => [b.id, b.level])), xp: D.empire.xp, budget: D.budget.remaining, story: [], claimed: 0, fx: [] };
+const disc = D.biz.map((b, i) => ({ id: 'd' + i, biz: b.id, x: P[b.id][0] * 1.0 + (P[b.id][0] > 0 ? -70 : 70), y: P[b.id][1] * 1.0 + (P[b.id][1] > 0 ? 50 : -50), title: b.opp, done: false }));
+const cv = $('#w'), ctx = cv.getContext('2d');
+const cam = new Camera(cv, { z: 1, min: .4, max: 3, limit: 300, onTap: (wx, wy) => {
+  const d = disc.find(d => !d.done && Math.hypot(d.x - wx, d.y - wy) < 22); if (d) return open('disc', d.id);
+  const w = workers.find(w => Math.hypot(w.x - wx, w.y - wy) < 10); if (w) return open('agent', w.a.id);
+  for (const k in P) if (Math.abs(P[k][0] - wx) < 44 && Math.abs(P[k][1] - wy) < 44) { const z = Math.max(cam.z, 1.2); cam.focus(P[k][0], P[k][1] + cam.h * .22 / z, z); return open('biz', k); }
+  close();
+} });
+// workers walk Manhattan paths between their building and HQ
+const workers = D.agents.map((a, i) => ({ a, x: 0, y: 0, u: rnd(), dir: 1, spd: .0004 + rnd() * .0003, home: a.biz === 'shared' ? ['etsy', 'assets', 'affiliate', 'fiverr'][i % 4] : a.biz }));
+function pos(w) { const [bx, by] = P[w.home], u = w.u; return u < .5 ? [bx * u * 2, 0] : [bx, by * (u - .5) * 2]; }
+let last = 0;
+function sim(t) { const dt = t - last; last = t; workers.forEach(w => { if (w.a.state === 'working') { w.u += w.dir * w.spd * dt; if (w.u > 1) { w.u = 1; w.dir = -1; } if (w.u < 0) { w.u = 0; w.dir = 1; if (rnd() < .5) S.fx.push({ x: P.hq[0], y: -20, t, s: '+' + ['XP', '$', '✓'][Math.floor(rnd() * 3)] }); } } else if (w.a.state === 'idle') { w.u = .96; } else { w.u = .9; } const [x, y] = pos(w); w.x = x; w.y = y; }); }
+const R = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); };
+function shade(hex, a) { const n = parseInt(hex.slice(1), 16), f = c => clamp(Math.round(a < 0 ? c * (1 + a) : c + (255 - c) * a), 0, 255); return `rgb(${f(n >> 16)},${f((n >> 8) & 255)},${f(n & 255)})`; }
+function building(k, t) {
+  const [cx, cy] = P[k], b = k === 'hq' ? { color: '#ffcf5c' } : bizById(k), tier = k === 'hq' ? 3 : S.tier[k], c = b.color;
+  R(cx - 36, cy + 22, 76, 8, '#0004'); R(cx - 34, cy - 4, 68, 28, shade(c, -.45)); R(cx - 36, cy - 10, 72, 8, shade(c, .1)); R(cx - 34, cy - 4, 68, 3, shade(c, .35));
+  for (let i = 0; i < 4; i++) R(cx - 28 + i * 16, cy + 4, 8, 8, (t / 800 + i) % 4 < 3 ? '#fff2a8' : '#5a4a2a');
+  R(cx - 5, cy + 12, 10, 12, '#2a1a0a');
+  if (tier >= 2) { R(cx + 30, cy - 22, 20, 44, shade(c, -.3)); R(cx + 28, cy - 26, 24, 6, shade(c, .15)); R(cx + 36, cy - 14, 8, 8, '#bff'); }
+  if (tier >= 3) { R(cx - 52, cy - 12, 18, 34, shade(c, -.35)); R(cx - 54, cy - 16, 22, 6, shade(c, .1)); R(cx - 48, cy - 4, 8, 8, '#bff'); }
+  if (tier >= 4) { ctx.fillStyle = '#8ff'; ctx.beginPath(); ctx.arc(cx, cy - 22, 14, Math.PI, 0); ctx.fill(); }
+  if (k === 'hq') { R(cx - 2, cy - 50, 4, 40, '#aab'); const f = Math.sin(t / 200) * 3; R(cx + 2, cy - 50, 16 + f, 8, '#ff5a5a'); }
+  // smoke when working agents present
+  if (D.agents.some(a => a.biz === k && a.state === 'working')) for (let i = 0; i < 3; i++) { const q = ((t / 1400 + i / 3) % 1); R(cx - 24 + Math.sin(q * 6) * 3, cy - 12 - q * 22, 4 - q * 2, 4 - q * 2, `rgba(220,220,220,${1 - q})`); }
+  text(ctx, (b.name || 'HEADQUARTERS').toUpperCase().slice(0, 20), cx, cy + 42, 8, '#fff4dc'); if (k !== 'hq') { const s = b.profit >= 0 ? '#8aff7a' : '#ff7a7a'; text(ctx, signed(b.profit), cx, cy + 53, 9, s); text(ctx, 'TIER ' + tier, cx, cy - 32 - (tier >= 2 ? 0 : 0), 7, '#ffcf5c'); }
+  if (S.sel === k) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.setLineDash([5, 4]); ctx.lineDashOffset = -t / 50; ctx.strokeRect(cx - 58, cy - 56, 116, 116); ctx.setLineDash([]); }
+}
+function worker(w, t) {
+  const c = w.a.biz === 'shared' ? '#c77dff' : bizById(w.a.biz).color, step = Math.floor(t / 150) % 2, x = Math.round(w.x), y = Math.round(w.y);
+  R(x - 3, y + 5, 7, 2, '#0005'); R(x - 2, y - 6, 5, 5, '#f0c8a0'); R(x - 3, y - 1, 7, 6, c); R(x - 3 + step, y + 5, 2, 3, '#222'); R(x + 1 - step, y + 5, 2, 3, '#222');
+  if (w.a.state === 'working') R(x + 4, y - 3, 4, 4, w.dir > 0 ? '#ffcf5c' : '#8aff7a'); // crate: raw input out, finished output back
+  if (w.a.state === 'blocked') text(ctx, '!', x, y - 10, 12, '#ff5a5a');
+  if (w.a.state === 'idle') text(ctx, 'z', x + 6, y - 8 - Math.sin(t / 300) * 2, 8, '#fff');
+}
+function frame(t) {
+  sim(t); cam.begin(ctx); const v = cam.view();
+  const night = (Math.sin(t / 9000) + 1) / 2; // visual only
+  for (let gx = Math.floor(v.x0 / T) - 1; gx < v.x1 / T + 1; gx++) for (let gy = Math.floor(v.y0 / T) - 1; gy < v.y1 / T + 1; gy++) { const n = hash(gx, gy); R(gx * T, gy * T, T, T, n > .8 ? '#4d8a3a' : n > .4 ? '#447f34' : '#3d7430'); if (n > .9) { R(gx * T + 6, gy * T + 2, 3, 8, '#2b5a22'); R(gx * T + 3, gy * T - 4, 9, 8, '#2f6a28'); } }
+  for (const k of ['etsy', 'assets', 'affiliate', 'fiverr']) { const [x, y] = P[k]; R(0, -3, x, 6, '#a08a60'); R(x - 3, Math.min(0, y), 6, Math.abs(y), '#a08a60'); }
+  Object.keys(P).sort((a, b) => P[a][1] - P[b][1]).forEach(k => building(k, t));
+  workers.forEach(w => worker(w, t));
+  disc.forEach(d => { if (d.done) return; const f = Math.sin(t / 250) * 3; ctx.save(); ctx.shadowColor = '#b07cff'; ctx.shadowBlur = 14; R(d.x - 5, d.y - 10 + f, 10, 14, '#b07cff'); R(d.x - 2, d.y - 8 + f, 3, 6, '#fff'); ctx.restore(); text(ctx, '?', d.x, d.y + 22, 9, '#e8d0ff'); });
+  S.fx = S.fx.filter(f => t - f.t < 1200); S.fx.forEach(f => text(ctx, f.s, f.x, f.y - (t - f.t) / 30, 10, '#ffcf5c'));
+  cam.end(ctx);
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = `rgba(10,10,50,${night * .4})`; ctx.fillRect(0, 0, cv.width, cv.height);
+  if (!frame.s || t - frame.s > 2500) { frame.s = t; const w = workers.filter(w => w.a.state !== 'idle')[Math.floor(t / 2500) % 10]; if (w) $('#story').textContent = `${w.a.name} (${w.a.role}): ${w.a.task}`; }
+  requestAnimationFrame(frame);
+}
+const ERAS = ['Garage', 'Workshop', 'Factory Town', 'Autonomous City'];
+function hud() {
+  const era = Math.min(3, Math.floor(S.xp / 200)), nxt = (era + 1) * 200;
+  $('#era').innerHTML = `<b>ERA ${era + 1}: ${ERAS[era].toUpperCase()}</b> · ${S.xp}/${nxt} XP<div class="bar"><u style="width:${clamp((S.xp - era * 200) / 200, 0, 1) * 100}%"></u></div>`;
+  $('#stats').innerHTML = `<div>NET 7D<b class="${D.net >= 0 ? 'pos' : 'neg'}">${signed(D.net)}</b></div><div>BUDGET<b>${money(S.budget)}</b></div><div>FINDS<b>${disc.filter(d => !d.done).length}</b></div>`;
+  const n = disc.filter(d => !d.done).length; $('#nd').textContent = n; $('#nd').style.display = n ? '' : 'none';
+}
+function celebrate(t, p) { $('#ct').textContent = t; $('#cp').textContent = p; $('#cele').classList.add('on'); for (let i = 0; i < 30; i++) S.fx.push({ x: (rnd() - .5) * 200, y: (rnd() - .5) * 100, t: performance.now() + i * 10, s: ['★', '✦', '$'][i % 3] }); }
+$('#cb').onclick = () => $('#cele').classList.remove('on');
+function open(kind, id) {
+  const sh = $('#sheet'); let h = '<button class="x">✕</button>'; S.sel = null;
+  if (kind === 'biz') { S.sel = id; if (id === 'hq') h += `<h2>HEADQUARTERS</h2><div class="box">Supervisor: <b>${D.supervisor.state}</b> · load ${pct(D.supervisor.load)}</div>${D.supervisor.decisions.map(d => `<div class="box">${d}</div>`).join('')}<h2>Milestones</h2>${milestones()}`; else { const b = bizById(id); h += `<h2 style="color:${b.color}">${b.name} · Tier ${S.tier[id]}</h2><div class="kv"><div>REVENUE<b>${money(b.rev)}</b></div><div>COST<b>${money(b.cost)}</b></div><div>PROFIT<b class="${b.profit >= 0 ? 'pos' : 'neg'}">${signed(b.profit)}</b></div></div><div class="box w">WHY: ${b.why}</div><div class="box o">NEW OPPORTUNITY: ${b.opp}</div>${D.upgrades.filter(u => u.biz === id && u.cost <= 25).map(u => `<button class="btn" data-up="${u.id}">EVOLVE: ${u.name} ${money(u.cost, 0)}</button><small>${u.effect}</small>`).join('')}${costBars(b)}<h2 style="margin-top:8px">Residents</h2>${D.agents.filter(a => a.biz === id).map(agentRow).join('')}`; } }
+  if (kind === 'agent') { const a = D.agents.find(x => x.id === id); h += `<h2>${a.name}</h2>${agentRow(a)}<div class="box">Level ${a.lvl} ${a.role}. XP grows from verified results, not from time spent. Cost this week ${money(a.cost)}.</div>`; }
+  if (kind === 'disc') { const d = disc.find(x => x.id === id); h += `<h2>💎 Discovery</h2><div class="disc">${d.title}<br><button class="btn" data-claim="${d.id}">ASSIGN RESEARCH (demo)</button></div>`; }
+  if (kind === 'crew') h += `<h2>Crew (${D.agents.length})</h2>${D.agents.map(agentRow).join('')}`;
+  if (kind === 'discs') h += `<h2>Discoveries</h2>${disc.map(d => `<div class="disc ${d.done ? 'done' : ''}">${bizById(d.biz).short}: ${d.title}${d.done ? '<br>✔ research assigned' : `<br><button class="btn" data-claim="${d.id}">ASSIGN RESEARCH (demo)</button>`}</div>`).join('')}`;
+  if (kind === 'time') h += `<h2>Story so far</h2>${S.story.map(s => `<div class="ev"><time>now</time>${s}</div>`).join('')}${D.events.map(eventRow).join('')}<h2 style="margin-top:8px">Milestones</h2>${milestones()}${D.quests.map(questRow).join('')}`;
+  sh.innerHTML = h; sh.classList.add('open'); sh.scrollTop = 0;
+}
+function close() { S.sel = null; $('#sheet').classList.remove('open'); }
+function milestones() { return [['Explorer: claim 3 discoveries', S.claimed, 3], ['Profitable week (verified)', 1, 1], ['Era III: Factory Town', Math.min(S.xp, 400), 400]].map(([n, p, g]) => `<div class="ms">${p >= g ? '✔' : '◻'} ${n} <small>(${p}/${g})</small></div>`).join(''); }
+$('#sheet').onclick = e => { const t = e.target;
+  if (t.classList.contains('x')) close();
+  if (t.dataset.claim) { const d = disc.find(x => x.id === t.dataset.claim); d.done = true; S.claimed++; S.xp += 40; S.story.unshift(`Discovery assigned: ${d.title}`); hud(); close(); if (S.claimed === 3) celebrate('MILESTONE: EXPLORER', 'Three opportunities sent to research. In the real system this unlocks once the findings are actually evaluated.'); }
+  if (t.dataset.up) { const u = D.upgrades.find(x => x.id === t.dataset.up); S.tier[u.biz]++; S.budget -= u.cost; S.xp += 30; S.story.unshift(`${u.name} installed (${u.effect})`); hud(); t.textContent = '✔ evolved!'; t.disabled = true; if (S.xp >= 400 && S.xp - 30 < 400) celebrate('ERA III: FACTORY TOWN', 'Your empire grew. In the real system, eras follow measured capability and profit.'); } };
+$('#nav').onclick = e => { const b = e.target.closest('button'); if (!b) return; $$('#nav button').forEach(x => x.classList.toggle('on', x === b)); const t = b.dataset.t; if (t === 'map') close(); else open(t === 'crew' ? 'crew' : t === 'disc' ? 'discs' : 'time'); };
+$('#zi').onclick = () => cam.zoomBy(1.3); $('#zo').onclick = () => cam.zoomBy(1 / 1.3);
+const fit = () => clamp(Math.min(cam.w / 440, (cam.h - 170) / 380), .4, 1.6); $('#zc').onclick = () => cam.focus(0, 0, fit());
+cam.focus(0, 0, fit()); hud(); requestAnimationFrame(frame);
+</script></body></html>

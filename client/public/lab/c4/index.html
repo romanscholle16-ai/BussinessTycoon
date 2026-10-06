@@ -1,0 +1,111 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Concept 4 – Minimal Strategy</title>
+<link rel="stylesheet" href="../shared/lab.css">
+<style>
+html,body{overflow:auto;height:auto}
+:root{--bg:#f3f1ea;--ink:#1c1c28;--mute:#76748a;--card:#fff;--line:#1c1c28;--good:#12a05c;--bad:#e5384f;--warn:#e9a100;--acc:#3b3bff}
+body{background:var(--bg);color:var(--ink);padding-bottom:76px}
+.wrap{max-width:560px;margin:auto;padding:12px;padding-top:calc(12px + env(safe-area-inset-top))}
+.px{border:3px solid var(--line);box-shadow:4px 4px 0 var(--line);background:var(--card);border-radius:0}
+.hero{padding:14px;margin-bottom:14px}
+.hero small{color:var(--mute);letter-spacing:1px;font-size:11px}.hero .big{font-size:40px;font-weight:bold;line-height:1.1}.good{color:var(--good)}.bad{color:var(--bad)}
+.lvl{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:12px}.lvl .bar{flex:1;height:12px;border:2px solid var(--line);background:#fff}.lvl .bar u{display:block;height:100%;background:var(--acc)}
+canvas#spark{width:100%;height:56px;display:block;margin-top:8px}
+.next{padding:12px;margin-bottom:14px;background:#fff7d6}.next h3{margin:0 0 4px;font-size:11px;letter-spacing:1px;color:var(--mute)}.next b{font-size:15px}.next p{margin:4px 0 8px;font-size:12px}
+.btn{background:var(--acc);color:#fff;border:3px solid var(--line);box-shadow:3px 3px 0 var(--line);padding:11px 14px;min-height:44px;font-weight:bold;margin-right:8px}.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--line)}.btn.alt{background:#fff;color:var(--ink)}
+h2.s{font-size:12px;letter-spacing:2px;margin:18px 0 8px;color:var(--mute)}
+.biz{padding:0;margin-bottom:12px;cursor:pointer}.biz .h{display:flex;align-items:center;gap:10px;padding:12px}
+.rank{width:28px;height:28px;border:3px solid var(--line);display:grid;place-items:center;font-weight:bold;font-size:13px}.biz .nm{flex:1}.biz .nm b{display:block;font-size:15px}.biz .nm small{color:var(--mute);font-size:11px}
+.pf{font-size:20px;font-weight:bold;text-align:right}.pf small{display:block;font-size:11px;color:var(--mute);font-weight:normal}
+.dual{display:flex;height:10px;margin:0 12px 12px;border:2px solid var(--line)}.dual u{display:block;height:100%}
+.more{display:none;border-top:3px dashed var(--line);padding:12px;font-size:13px;line-height:1.45}.biz.open .more{display:block}
+.more .pill{display:inline-block;border:2px solid var(--line);padding:2px 6px;font-size:11px;margin:2px 4px 2px 0}
+.cb{display:grid;grid-template-columns:48px 1fr 50px;gap:6px;font-size:11px;align-items:center}.bar{display:block;height:8px;background:#e6e3d8}.bar u{display:block;height:100%;background:var(--ink)}
+.agent,.ev,.quest{padding:8px 0;border-top:2px solid #e6e3d8;font-size:12px}.agent .name{font-weight:bold}.agent .meta,.agent .task{display:block;color:var(--mute)}.xp{display:block;height:4px;background:#e6e3d8;margin:3px 0}.xp u{display:block;height:100%;background:var(--acc)}
+.ev time{color:var(--acc);margin-right:8px;font-weight:bold}.quest b{display:block}.quest.done b::after{content:' ✔';color:var(--good)}
+.alloc{padding:12px}.alloc .r{display:grid;grid-template-columns:62px 1fr 44px;gap:8px;align-items:center;margin:10px 0;font-size:12px}
+input[type=range]{width:100%;height:36px;accent-color:var(--acc)}
+.proj{background:#eef;border:2px dashed var(--line);padding:8px;font-size:12px;margin-top:8px}
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:#fff;border-top:3px solid var(--line);z-index:20;padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;background:none;border:0;min-height:56px;font-size:12px;font-weight:bold;color:var(--mute)}nav button.on{color:var(--ink);background:#ffe27a}
+.pg{display:none}.pg.on{display:block}
+#map{width:100%;height:230px;display:block;background:#dfe9d6;border:3px solid var(--line);touch-action:none}
+.chips{display:flex;flex-wrap:wrap;gap:6px}.chip{border:2px solid var(--line);padding:4px 8px;font-size:11px;background:#fff}
+.tipbox{font-size:12px;margin-top:6px;color:var(--mute)}
+.up{padding:10px;margin-bottom:10px}.up b{display:block}.up small{color:var(--mute)}
+#labchip>button{background:#fff;color:#000;border-color:#000}
+</style></head><body>
+<div class="wrap">
+ <div class="pg on" id="p-home">
+  <div class="px hero"><small>NET PROFIT · LAST 7 DAYS · DEMO DATA</small><div class="big" id="net"></div><canvas id="spark"></canvas><div class="lvl"><b id="lvl"></b><i class="bar"><u id="xp"></u></i><span id="xpt"></span></div></div>
+  <div class="px next" id="next"></div>
+  <h2 class="s">BUSINESSES · RANKED BY ROI · TAP FOR WHY</h2><div id="biz"></div>
+ </div>
+ <div class="pg" id="p-alloc">
+  <h2 class="s">BUDGET ALLOCATION · WHAT-IF (ESTIMATE)</h2><div class="px alloc" id="alloc"></div>
+  <h2 class="s">UPGRADES · BEST PAYBACK FIRST</h2><div id="ups"></div>
+ </div>
+ <div class="pg" id="p-map">
+  <h2 class="s">EMPIRE MAP · PAN / PINCH · TAP A BLOCK</h2><canvas id="map"></canvas><div class="px" style="padding:12px;margin-top:12px" id="mapinfo">Tap a building.</div>
+  <h2 class="s">SUPERVISOR</h2><div class="px" style="padding:12px" id="sup"></div>
+ </div>
+ <div class="pg" id="p-prog">
+  <h2 class="s">QUESTS · UNLOCKED BY REAL RESULTS</h2><div class="px" style="padding:12px" id="q"></div>
+  <h2 class="s">AGENTS</h2><div class="px" style="padding:12px" id="ag"></div>
+  <h2 class="s">TIMELINE</h2><div class="px" style="padding:12px" id="ev"></div>
+ </div>
+</div>
+<nav id="nav"><button data-p="home" class="on">HOME</button><button data-p="alloc">ALLOCATE</button><button data-p="map">MAP</button><button data-p="prog">PROGRESS</button></nav>
+<script src="../shared/data.js"></script><script src="../shared/common.js"></script>
+<script>
+labChip(4);
+const S = { open: 'fiverr', share: Object.fromEntries(D.biz.map(b => [b.id, b.cost / D.cost])), bought: new Set() };
+function home() {
+  $('#net').innerHTML = `<span class="${D.net >= 0 ? 'good' : 'bad'}">${signed(D.net)}</span>`;
+  $('#lvl').textContent = 'LV ' + D.empire.level; $('#xp').style.width = D.empire.xp / D.empire.next * 100 + '%'; $('#xpt').textContent = `${D.empire.xp}/${D.empire.next} XP`;
+  const f = bizById('fiverr');
+  $('#next').innerHTML = `<h3>NEXT BEST ACTION</h3><b>Stop the leak: pause Fiverr ads</b><p>${f.name} lost ${money(-f.profit)} with 0 orders. Pausing frees ~$6/wk for Etsy research (est. +$2/wk).</p><button class="btn" id="act">PAUSE ADS</button><button class="btn alt" id="skip">LATER</button>`;
+  $('#act').onclick = () => { $('#next').innerHTML = `<h3>DONE (DEMO)</h3><b class="good">✔ Ads paused. Savings tracked in the ledger.</b><p>Next: ${D.upgrades[0].name} – payback ${D.upgrades[0].payback}.</p>`; };
+  $('#skip').onclick = () => $('#next').style.opacity = .5;
+  const ranked = [...D.biz].sort((a, b) => b.roi - a.roi), mx = Math.max(...D.biz.map(b => Math.max(b.rev, b.cost)));
+  $('#biz').innerHTML = ranked.map((b, i) => `<div class="px biz ${S.open === b.id ? 'open' : ''}" data-id="${b.id}"><div class="h"><div class="rank" style="background:${b.color}">${i + 1}</div><div class="nm"><b>${b.name}</b><small>${b.status === 'loss' ? '⚠ losing money' : b.status === 'watch' ? '◔ watch' : '● healthy'} · ROI ${pct(b.roi)}</small></div><div class="pf ${b.profit >= 0 ? 'good' : 'bad'}">${signed(b.profit)}<small>${money(b.rev)} in · ${money(b.cost)} out</small></div></div>
+  <div class="dual"><u style="width:${b.rev / mx * 50}%;background:var(--good)"></u><u style="width:${b.cost / mx * 50}%;background:var(--bad);margin-left:auto"></u></div>
+  <div class="more"><b>Why:</b> ${b.why}<br><span class="pill">◆ ${b.opp}</span>${b.attention ? `<span class="pill" style="background:#ffd">⚠ ${b.attention}</span>` : ''}<div style="margin:8px 0 4px"><b>Where cost goes</b></div>${costBars(b)}<div style="margin:8px 0 4px"><b>Agents</b> (${D.agents.filter(a => a.biz === b.id).length})</div>${D.agents.filter(a => a.biz === b.id).map(agentRow).join('') || '<small>Uses shared agents</small>'}</div></div>`).join('');
+  spark();
+}
+$('#biz').onclick = e => { const c = e.target.closest('.biz'); if (!c) return; S.open = S.open === c.dataset.id ? null : c.dataset.id; home(); };
+function spark() {
+  const c = $('#spark'), x = c.getContext('2d'), w = c.width = c.clientWidth * 2, h = c.height = 112, d = D.trend, mn = Math.min(...d), mx = Math.max(...d);
+  x.strokeStyle = '#1c1c28'; x.lineWidth = 4; x.beginPath(); d.forEach((v, i) => { const px = i / (d.length - 1) * (w - 12) + 6, py = h - 10 - (v - mn) / (mx - mn) * (h - 20); i ? x.lineTo(px, py) : x.moveTo(px, py); }); x.stroke();
+}
+function alloc() {
+  const tot = Object.values(S.share).reduce((a, b) => a + b, 0);
+  $('#alloc').innerHTML = D.biz.map(b => `<div class="r"><b style="color:${b.color}">${b.short}</b><input type="range" min="0" max="60" value="${Math.round(S.share[b.id] / tot * 100)}" data-id="${b.id}"><span>${Math.round(S.share[b.id] / tot * 100)}%</span></div>`).join('') + `<div class="proj" id="proj"></div>`;
+  proj();
+}
+function proj() {
+  const tot = Object.values(S.share).reduce((a, b) => a + b, 0) || 1;
+  // simple, transparent estimate: weekly profit ≈ sum(budget_i * roi_i), budget fixed at current cost
+  const est = D.biz.reduce((a, b) => a + (S.share[b.id] / tot) * D.cost * (b.roi), 0), cur = D.net;
+  $('#proj').innerHTML = `Projected weekly profit: <b class="${est >= cur ? 'good' : 'bad'}">${signed(est)}</b> (now ${signed(cur)}).<br><small>Model: shares × each business's current ROI. A rough estimate, not a promise; the Supervisor re-tests after changes.</small>`;
+}
+$('#alloc').oninput = e => { if (e.target.type !== 'range') return; S.share[e.target.dataset.id] = +e.target.value / 100; e.target.nextElementSibling.textContent = e.target.value + '%'; proj(); };
+function ups() {
+  $('#ups').innerHTML = [...D.upgrades].sort((a, b) => a.cost - b.cost).map(u => `<div class="px up"><b>${u.name} · ${money(u.cost, 0)}</b>${u.effect}<br><small>${bizById(u.biz).name} · payback ${u.payback} · ${u.cost > 25 ? 'needs human approval' : u.cost > 5 ? 'auto within rules' : 'auto'}</small><br>${S.bought.has(u.id) ? '<b class="good">✔ installed</b>' : `<button class="btn" data-u="${u.id}">${u.cost > 25 ? 'REQUEST' : 'INSTALL'}</button>`}</div>`).join('');
+}
+$('#ups').onclick = e => { const id = e.target.dataset.u; if (!id) return; const u = D.upgrades.find(x => x.id === id); if (u.cost > 25) { e.target.textContent = 'SENT TO YOU ✔'; return; } S.bought.add(id); ups(); };
+function misc() {
+  $('#sup').innerHTML = `<b>${D.supervisor.state}</b> · load ${pct(D.supervisor.load)}<br>${D.supervisor.decisions.map(d => '• ' + d).join('<br>')}<div class="tipbox">${Object.entries(D.health).map(([k, v]) => `<span class="chip">${k}: ${v}</span>`).join(' ')}</div>`;
+  $('#q').innerHTML = D.quests.map(questRow).join(''); $('#ag').innerHTML = D.agents.map(agentRow).join(''); $('#ev').innerHTML = D.events.map(eventRow).join('');
+}
+$('#nav').onclick = e => { const p = e.target.dataset.p; if (!p) return; $$('#nav button').forEach(b => b.classList.toggle('on', b === e.target)); $$('.pg').forEach(x => x.classList.toggle('on', x.id === 'p-' + p)); window.scrollTo(0, 0); if (p === 'alloc') { alloc(); ups(); } if (p === 'home') home(); };
+// flat map: clean tiles, size = revenue, ring = health
+const mc = $('#map'), mx = mc.getContext('2d'); const MP = { hq: [0, 0], etsy: [-80, -50], assets: [80, -50], affiliate: [-80, 50], fiverr: [80, 50] }; let msel = null;
+const mcam = new Camera(mc, { z: 1.2, min: .6, max: 3, limit: 150, onTap: (wx, wy) => { msel = null; for (const k in MP) if (Math.abs(wx - MP[k][0]) < 28 && Math.abs(wy - MP[k][1]) < 28) msel = k; const b = msel && msel !== 'hq' ? bizById(msel) : null; $('#mapinfo').innerHTML = b ? `<b>${b.name}</b><br>${signed(b.profit)} · ROI ${pct(b.roi)} · health ${b.health}%<br><small>${b.why}</small>` : msel ? '<b>HQ / Supervisor</b><br>' + D.supervisor.state : 'Tap a building.'; } });
+function drawMap(t) {
+  mcam.begin(mx); mx.strokeStyle = '#1c1c28'; mx.lineWidth = 2;
+  for (const k in MP) { if (k === 'hq') continue; mx.beginPath(); mx.moveTo(0, 0); mx.lineTo(...MP[k]); mx.stroke(); }
+  for (const k in MP) { const [x, y] = MP[k], b = k === 'hq' ? null : bizById(k), s = b ? 22 + b.rev * .6 : 30; mx.fillStyle = b ? b.color : '#ffe27a'; mx.fillRect(x - s / 2, y - s / 2, s, s); mx.lineWidth = 3; mx.strokeStyle = '#1c1c28'; mx.strokeRect(x - s / 2, y - s / 2, s, s); if (b) { mx.fillStyle = b.profit >= 0 ? '#12a05c' : '#e5384f'; mx.fillRect(x + s / 2 - 8, y - s / 2 - 8, 14, 14); mx.strokeRect(x + s / 2 - 8, y - s / 2 - 8, 14, 14); } if (msel === k) { mx.setLineDash([5, 4]); mx.strokeRect(x - s / 2 - 5, y - s / 2 - 5, s + 10, s + 10); mx.setLineDash([]); } text(mx, b ? b.short : 'HQ', x, y + 4, 10, '#1c1c28'); }
+  mcam.end(mx); requestAnimationFrame(drawMap);
+}
+home(); misc(); requestAnimationFrame(drawMap);
+</script></body></html>

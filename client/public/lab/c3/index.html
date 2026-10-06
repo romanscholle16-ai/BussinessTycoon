@@ -1,0 +1,89 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Concept 3 – Cyber City</title>
+<link rel="stylesheet" href="../shared/lab.css">
+<style>
+body{background:#07020f;color:#e9d9ff}
+#c{position:absolute;inset:0;width:100%;height:100%}
+.glass{background:#14062acc;border:1px solid #ff2fd666;box-shadow:0 0 14px #ff2fd633,inset 0 0 12px #00f0ff22;backdrop-filter:blur(6px);border-radius:10px}
+.ticker{position:absolute;top:calc(4px + env(safe-area-inset-top));left:4px;right:84px;padding:6px 10px;font-size:11px;white-space:nowrap;overflow:hidden;z-index:5}
+.ticker span{display:inline-block;animation:tk 22s linear infinite;padding-left:100%}
+@keyframes tk{to{transform:translateX(-100%)}}
+.cash{position:absolute;top:calc(44px + env(safe-area-inset-top));left:4px;padding:8px 12px;z-index:5;font-size:11px;display:flex;gap:14px}
+.cash b{display:block;font-size:18px;color:#00f0ff;text-shadow:0 0 8px #00f0ff}.cash .neg{color:#ff4d6d}
+.layers{position:absolute;left:4px;right:4px;bottom:calc(6px + env(safe-area-inset-bottom));display:flex;gap:6px;z-index:6}
+.layers button{flex:1;min-height:48px;background:#14062acc;color:#c9a8ff;border:1px solid #ff2fd655;border-radius:10px;font-size:11px}
+.layers button.on{color:#00f0ff;border-color:#00f0ff;box-shadow:0 0 10px #00f0ff66}
+.card{position:absolute;left:6px;right:6px;bottom:calc(64px + env(safe-area-inset-bottom));max-height:56%;overflow:auto;z-index:8;padding:12px;transform:translateY(130%);transition:transform .25s}
+.card:not(.open){visibility:hidden;pointer-events:none}.card.open{transform:none}.card h2{margin:0 0 6px;font-size:15px;text-shadow:0 0 10px currentColor}.card .x{position:absolute;right:8px;top:8px;background:none;border:1px solid #fff5;color:#fff;border-radius:6px;min-width:40px;min-height:36px}
+.g{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin:8px 0}.g div{border:1px solid #ffffff22;border-radius:6px;padding:6px;font-size:10px;color:#b99}.g b{display:block;font-size:15px;color:#fff}
+.pos{color:#37ffb0!important}.neg{color:#ff4d6d!important}
+.agent,.ev,.quest{font-size:12px;padding:6px 0;border-top:1px solid #ffffff18}.agent .name{color:#00f0ff}.agent .meta,.agent .task{display:block;color:#c9a8ff}
+.xp,.bar{display:block;height:4px;background:#ffffff18;margin:3px 0}.xp u,.bar u{display:block;height:100%;background:#ff2fd6}
+.ev time{color:#00f0ff;margin-right:8px}.cb{display:grid;grid-template-columns:44px 1fr 50px;gap:6px;font-size:11px}
+.note{font-size:12px;padding:6px 8px;border-left:3px solid #ffd24a;margin:6px 0;background:#0004}.note.o{border-color:#37ffb0}
+.btn{background:#ff2fd6;color:#000;border:0;border-radius:6px;padding:10px 14px;min-height:42px;font-weight:bold;margin:4px 6px 0 0}
+.ui{position:absolute;right:6px;top:calc(46px + env(safe-area-inset-top));display:flex;flex-direction:column;gap:6px;z-index:6}.ui button{width:44px;height:44px;border-radius:10px;background:#14062acc;color:#00f0ff;border:1px solid #00f0ff88;font-size:20px}
+</style></head><body>
+<canvas id="c"></canvas>
+<div class="glass ticker"><span id="tk"></span></div>
+<div class="glass cash" id="cash"></div>
+<div class="ui"><button id="zi">+</button><button id="zo">−</button><button id="zc">⌖</button></div>
+<div class="glass card" id="card"></div>
+<div class="layers" id="layers"><button data-l="money" class="on">💸 MONEY FLOW</button><button data-l="agents" class="on">🛸 AGENTS</button><button data-l="health">❤ HEALTH</button><button data-l="feed">📡 FEED</button></div>
+<script src="../shared/data.js"></script><script src="../shared/common.js"></script>
+<script>
+labChip(3);
+const L = { money: true, agents: true, health: false, feed: false };
+const P = { hq: [0, 0], etsy: [-130, -90], assets: [130, -90], affiliate: [-130, 100], fiverr: [130, 100] };
+const cv = $('#c'), ctx = cv.getContext('2d'); let sel = null;
+const cam = new Camera(cv, { z: 1, min: .5, max: 3, limit: 300, onTap: (wx, wy) => { sel = null; for (const k of Object.keys(P)) if (Math.hypot(wx - P[k][0], wy - P[k][1]) < 52) sel = k; if (sel) cam.focus(P[sel][0], P[sel][1] + cam.h * .18 / Math.max(cam.z, 1.3), Math.max(cam.z, 1.3)); card(); } });
+const drones = D.agents.map((a, i) => ({ a, p: i / 12, spd: .0002 + (i % 4) * .00007, lane: a.biz === 'shared' ? 'etsy' : a.biz }));
+const cars = []; const rain = Array.from({ length: 90 }, () => ({ x: rnd() * 800 - 400, y: rnd() * 800 - 400, s: 2 + rnd() * 3 }));
+function glow(c, b) { ctx.shadowColor = c; ctx.shadowBlur = b; }
+function block(x, y, w, h, c, hgt, t) { ctx.fillStyle = '#0c0418'; ctx.fillRect(x, y - hgt, w, hgt + h * .0); ctx.fillStyle = '#120626'; ctx.fillRect(x, y - hgt, w, hgt); ctx.strokeStyle = c; ctx.lineWidth = 1; ctx.strokeRect(x + .5, y - hgt + .5, w - 1, hgt - 1); for (let i = 0; i < hgt / 6 - 1; i++) for (let j = 0; j < w / 6 - 1; j++) if (hash(x + j, y + i) > .5 && (t / 900 + hash(j, i) * 9) % 6 < 5) { ctx.fillStyle = c + '99'; ctx.fillRect(x + 3 + j * 6, y - hgt + 3 + i * 6, 3, 3); } }
+function district(k, t) {
+  const [cx, cy] = P[k], b = k === 'hq' ? { color: '#00f0ff', name: 'SUPERVISOR TOWER', health: 98, status: 'profit' } : bizById(k), c = b.color;
+  ctx.save(); glow(c, 18); ctx.strokeStyle = c; ctx.lineWidth = 2; ctx.strokeRect(cx - 50, cy - 40, 100, 80); ctx.restore();
+  ctx.fillStyle = c + '14'; ctx.fillRect(cx - 50, cy - 40, 100, 80);
+  const lv = k === 'hq' ? 4 : S_lv(k); const n = 3 + lv;
+  for (let i = 0; i < n; i++) { const bx = cx - 44 + (i % 4) * 23, by = cy - 10 + Math.floor(i / 4) * 30, hh = 16 + hash(i, cx) * (20 + lv * 14); ctx.save(); glow(c, 8); block(bx, by + 24, 18, 16, c, hh, t); ctx.restore(); }
+  if (k === 'hq') { ctx.save(); glow('#00f0ff', 20); ctx.fillStyle = '#00f0ff'; ctx.fillRect(cx - 2, cy - 120, 4, 110); ctx.beginPath(); ctx.moveTo(cx, cy - 120); ctx.lineTo(cx + Math.cos(t / 400) * 70, cy - 190); ctx.lineTo(cx - Math.cos(t / 400) * 70, cy - 190); ctx.fillStyle = '#00f0ff22'; ctx.fill(); ctx.restore(); }
+  text(ctx, b.name.toUpperCase(), cx, cy + 56, 8, c);
+  if (k !== 'hq') { text(ctx, signed(b.profit, 2), cx, cy + 68, 10, b.profit >= 0 ? '#37ffb0' : '#ff4d6d'); if (L.health) { ctx.fillStyle = '#000a'; ctx.fillRect(cx - 40, cy - 52, 80, 6); ctx.fillStyle = b.health > 85 ? '#37ffb0' : b.health > 75 ? '#ffd24a' : '#ff4d6d'; ctx.fillRect(cx - 40, cy - 52, 80 * b.health / 100, 6); } }
+  if (sel === k) { ctx.strokeStyle = '#fff'; ctx.setLineDash([6, 4]); ctx.lineDashOffset = -t / 40; ctx.strokeRect(cx - 58, cy - 48, 116, 96); ctx.setLineDash([]); }
+}
+const lv = {}; const S_lv = k => lv[k] ?? bizById(k).level + 1;
+function roads(t) {
+  for (const b of D.biz) {
+    const [x, y] = P[b.id]; ctx.save(); glow(b.color, 10); ctx.strokeStyle = b.color + '66'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(x, 0); ctx.lineTo(x, y); ctx.stroke(); ctx.restore();
+    if (L.money) { // packets flow toward HQ when profitable, away from HQ (spend) when losing; size = amount
+      const path = (u) => u < .5 ? [x * (1 - u * 2), 0] : [0 + x, y * (1 - (u - .5) * 2)]; // along x then y, from district to hq reversed below
+      const n = Math.max(2, Math.round(Math.abs(b.profit) / 3) + 2);
+      for (let i = 0; i < n; i++) { let u = ((t / 4000 + i / n) % 1); if (b.profit >= 0) u = 1 - u; const px = u < .5 ? x * (u * 2) : x, py = u < .5 ? 0 : y * ((u - .5) * 2);
+        ctx.save(); glow(b.profit >= 0 ? '#37ffb0' : '#ff4d6d', 12); ctx.fillStyle = b.profit >= 0 ? '#37ffb0' : '#ff4d6d'; const s = 3 + Math.min(4, Math.abs(b.profit) / 5); ctx.fillRect(px - s / 2, py - s / 2, s, s); ctx.restore(); }
+    }
+  }
+}
+function frame(t) {
+  cam.begin(ctx); const v = cam.view();
+  ctx.fillStyle = '#07020f'; ctx.fillRect(v.x0, v.y0, v.x1 - v.x0, v.y1 - v.y0);
+  ctx.strokeStyle = '#2a0f4a'; ctx.lineWidth = 1; for (let x = Math.floor(v.x0 / 20) * 20; x < v.x1; x += 20) { ctx.beginPath(); ctx.moveTo(x, v.y0); ctx.lineTo(x, v.y1); ctx.stroke(); } for (let y = Math.floor(v.y0 / 20) * 20; y < v.y1; y += 20) { ctx.beginPath(); ctx.moveTo(v.x0, y); ctx.lineTo(v.x1, y); ctx.stroke(); }
+  roads(t); Object.keys(P).forEach(k => district(k, t));
+  if (L.agents) drones.forEach(d => { const home = P[d.lane], p = (t * d.spd + d.p) % 1, a = Math.abs(p * 2 - 1); const x = home[0] * a, y = home[1] * a + Math.sin(t / 300 + d.p * 9) * 3 - 14; ctx.save(); glow(d.a.state === 'blocked' ? '#ffd24a' : '#00f0ff', 10); ctx.fillStyle = d.a.state === 'blocked' ? '#ffd24a' : d.a.state === 'idle' ? '#7a6a99' : '#00f0ff'; ctx.fillRect(x - 2, y - 2, 5, 3); ctx.fillRect(x - 5, y - 3, 3, 1); ctx.fillRect(x + 3, y - 3, 3, 1); ctx.restore(); });
+  ctx.fillStyle = '#9ad3ff55'; rain.forEach(r => { const y = (r.y + t / 6 * r.s * .1) % 800 - 400; ctx.fillRect(v.x0 + ((r.x + 400) % (v.x1 - v.x0 || 1)), v.y0 + ((y + 400) % (v.y1 - v.y0 || 1)), 1, 5); });
+  cam.end(ctx);
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = '#0003'; for (let y = 0; y < cv.height; y += 4) ctx.fillRect(0, y, cv.width, 1);
+  requestAnimationFrame(frame);
+}
+function cash() { $('#cash').innerHTML = `<div>NET 7D<b class="${D.net >= 0 ? 'pos' : 'neg'}">${signed(D.net)}</b></div><div>BUDGET<b>${money(D.budget.remaining)}</b></div><div>TODO<b class="neg">${D.supervisor.approvals}</b></div>`; $('#tk').textContent = D.events.map(e => `[${e.t}] ${e.text}`).join('   ◆   '); }
+function card() {
+  const c = $('#card'); if (!sel) { c.classList.remove('open'); return; }
+  if (sel === 'hq') c.innerHTML = `<button class="x">✕</button><h2 style="color:#00f0ff">SUPERVISOR TOWER</h2><div class="g"><div>STATE<b style="font-size:11px">${D.supervisor.state}</b></div><div>LOAD<b>${pct(D.supervisor.load)}</b></div><div>EMPIRE LV<b>${D.empire.level}</b></div></div>${D.supervisor.decisions.map(d => `<div class="note">${d}</div>`).join('')}<h2 style="margin-top:8px">QUESTS</h2>${D.quests.map(questRow).join('')}`;
+  else { const b = bizById(sel); c.innerHTML = `<button class="x">✕</button><h2 style="color:${b.color}">${b.name}</h2><div class="g"><div>REVENUE<b>${money(b.rev)}</b></div><div>COST<b>${money(b.cost)}</b></div><div>PROFIT<b class="${b.profit >= 0 ? 'pos' : 'neg'}">${signed(b.profit)}</b></div></div><div class="note">WHY: ${b.why}</div><div class="note o">DISCOVERY: ${b.opp}</div>${b.attention ? `<div class="note" style="border-color:#ff4d6d">NEEDS YOU: ${b.attention}</div><button class="btn" data-ok>APPROVE</button>` : ''}${D.upgrades.filter(u => u.biz === sel && u.cost <= 25).map(u => `<button class="btn" data-up="${u.id}">UPGRADE: ${u.name} ${money(u.cost, 0)}</button>`).join('')}${costBars(b)}<h2 style="margin-top:8px">AGENTS</h2>${D.agents.filter(a => a.biz === sel).map(agentRow).join('')}`; }
+  c.classList.add('open');
+}
+$('#card').onclick = e => { const t = e.target; if (t.classList.contains('x')) { sel = null; card(); } if (t.dataset.up) { const u = D.upgrades.find(x => x.id === t.dataset.up); lv[u.biz] = S_lv(u.biz) + 1; D.budget.remaining -= u.cost; cash(); t.textContent = '✔ installed — district expanded'; t.disabled = true; } if (t.dataset.ok !== undefined) { t.textContent = '✔ approved (demo)'; t.disabled = true; } };
+$('#layers').onclick = e => { const l = e.target.dataset.l; if (!l) return; if (l === 'feed') { sel = null; card(); const c = $('#card'); c.innerHTML = `<button class="x">✕</button><h2>LIVE FEED</h2>${D.events.map(eventRow).join('')}`; c.classList.add('open'); return; } L[l] = !L[l]; e.target.classList.toggle('on', L[l]); };
+$('#zi').onclick = () => cam.zoomBy(1.3); $('#zo').onclick = () => cam.zoomBy(1 / 1.3); $('#zc').onclick = () => cam.focus(0, 0, fit());
+const fit = () => clamp(Math.min(cam.w / 380, (cam.h - 160) / 380), .5, 1.6);
+cam.focus(0, 0, fit()); cash(); requestAnimationFrame(frame);
+</script></body></html>

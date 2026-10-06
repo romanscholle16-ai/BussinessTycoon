@@ -1,0 +1,118 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Concept 2 – Command Center</title>
+<link rel="stylesheet" href="../shared/lab.css">
+<style>
+html,body{overflow:auto;height:auto}
+body{background:#05080f;color:#cfe6ff;background-image:linear-gradient(#0e1a2b 1px,transparent 1px),linear-gradient(90deg,#0e1a2b 1px,transparent 1px);background-size:24px 24px;padding-bottom:70px}
+.top{position:sticky;top:0;z-index:10;background:#05080ff0;border-bottom:1px solid #1d4b73;padding:8px 10px;padding-top:calc(8px + env(safe-area-inset-top));display:flex;gap:10px;align-items:center;font-size:11px;letter-spacing:1px}
+.top h1{margin:0;font-size:13px;color:#4cf;flex:1;letter-spacing:3px}.led{display:inline-block;width:8px;height:8px;border-radius:50%;background:#3f6;box-shadow:0 0 6px #3f6;margin-right:4px}.led.w{background:#fb3;box-shadow:0 0 6px #fb3}
+.badge{background:#f43;color:#fff;border-radius:10px;padding:2px 8px;font-weight:bold}
+main{max-width:1100px;margin:auto;padding:10px;display:grid;gap:10px;grid-template-columns:1fr}
+@media(min-width:860px){main{grid-template-columns:1.1fr 1fr}.wide{grid-column:1/-1}}
+.panel{border:1px solid #1d4b73;background:#08121fdd;padding:10px;position:relative;clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,14px 100%,0 calc(100% - 14px))}
+.panel h2{margin:0 0 8px;font-size:11px;letter-spacing:2px;color:#4cf;text-transform:uppercase}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.kpi{border-left:2px solid #4cf;padding-left:6px}.kpi small{display:block;color:#6a8aa8;font-size:10px}.kpi b{font-size:17px}
+@media(max-width:480px){.kpis{grid-template-columns:repeat(2,1fr)}}
+.pos{color:#3f6}.neg{color:#f55}
+canvas{width:100%;display:block;touch-action:none;background:#030812;border:1px solid #123}
+#holo{height:300px}#net{height:280px}
+table{width:100%;border-collapse:collapse;font-size:12px}th{color:#6a8aa8;text-align:right;font-weight:normal;font-size:10px;padding:4px}td{padding:9px 4px;text-align:right;border-top:1px solid #123}td:first-child,th:first-child{text-align:left}
+tr.row{cursor:pointer}tr.row.sel{background:#4cf2}
+.flow{height:8px;background:#123;display:flex;margin-top:6px}.flow u{display:block;height:100%}
+.agent,.ev,.quest{border-bottom:1px solid #123;padding:7px 0;font-size:12px}.agent .name{color:#4cf}.agent .meta,.agent .task{display:block;color:#7fa}.agent .task{color:#cfe6ff}.agent.st-blocked .task{color:#fb3}
+.xp,.bar{display:block;height:4px;background:#123;margin:3px 0}.xp u,.bar u{display:block;height:100%;background:#4cf}
+.ev time{color:#4cf;margin-right:8px}.cb{display:grid;grid-template-columns:44px 1fr 50px;gap:6px;font-size:11px;align-items:center}
+.dq{border:1px solid #fb3;padding:8px;margin-bottom:8px;font-size:12px}.dq button{margin:6px 6px 0 0;padding:10px 14px;min-height:40px;background:#0c2a44;color:#cfe6ff;border:1px solid #4cf}.dq button.ok{background:#4cf;color:#000;font-weight:bold}
+.tabs{position:fixed;bottom:0;left:0;right:0;display:flex;background:#05080f;border-top:1px solid #1d4b73;z-index:10;padding-bottom:env(safe-area-inset-bottom)}
+.tabs button{flex:1;background:none;color:#6a8aa8;border:0;min-height:54px;font-size:11px;letter-spacing:1px}.tabs button.on{color:#4cf;border-top:2px solid #4cf}
+.sec{display:none}.sec.on{display:contents}
+.detail{font-size:12px;line-height:1.5}.detail .why{color:#fb3;margin:6px 0}.detail .opp{color:#3f6}
+.sup{font-size:12px}.sup li{margin:4px 0}
+.up{border:1px solid #1d4b73;padding:8px;margin:6px 0;font-size:12px}.up button{margin-top:6px;padding:8px 12px;min-height:38px;background:#4cf;border:0;font-weight:bold}
+</style></head><body>
+<div class="top"><h1>TYCOON // COMMAND</h1><span><span class="led"></span>SYS</span><span><span class="led w"></span>PROV 2/3</span><span class="badge" id="badge"></span></div>
+<main>
+ <div class="sec on" id="s-overview">
+  <section class="panel wide"><h2>Enterprise KPIs · 7d · demo data</h2><div class="kpis" id="kpis"></div></section>
+  <section class="panel"><h2>Holo-map · tap a node</h2><canvas id="holo"></canvas></section>
+  <section class="panel"><h2>Business performance</h2><table id="tbl"></table><div class="flow" id="flow"></div><div id="detail" class="detail"></div></section>
+  <section class="panel wide"><h2>Supervisor</h2><div class="sup" id="sup"></div></section>
+ </div>
+ <div class="sec" id="s-finance">
+  <section class="panel wide"><h2>Where the money goes</h2><div id="fin"></div></section>
+  <section class="panel wide"><h2>Upgrade ROI ranking (est.)</h2><div id="upg"></div></section>
+ </div>
+ <div class="sec" id="s-agents">
+  <section class="panel"><h2>Agent network · drag/zoom · tap node</h2><canvas id="net"></canvas><div id="nodeinfo" class="detail"></div></section>
+  <section class="panel"><h2>Agents</h2><div id="agents"></div></section>
+ </div>
+ <div class="sec" id="s-decisions">
+  <section class="panel"><h2>Awaiting human</h2><div id="dq"></div></section>
+  <section class="panel"><h2>Quests (tied to real results)</h2><div id="quests"></div></section>
+  <section class="panel wide"><h2>Event stream</h2><div id="ev"></div></section>
+ </div>
+</main>
+<div class="tabs" id="tabs"><button data-s="overview" class="on">OVERVIEW</button><button data-s="finance">FINANCE</button><button data-s="agents">AGENTS</button><button data-s="decisions">DECISIONS</button></div>
+<script src="../shared/data.js"></script><script src="../shared/common.js"></script>
+<script>
+labChip(2);
+const S = { sel: 'etsy', pend: [...D.approvalsPending], budget: D.budget.remaining };
+const col = b => b.status === 'loss' ? '#f55' : b.status === 'watch' ? '#fb3' : '#3f6';
+function kpis() {
+  const burn = D.cost / 7, run = S.budget / burn;
+  $('#kpis').innerHTML = [['NET PROFIT', signed(D.net), D.net >= 0 ? 'pos' : 'neg'], ['REVENUE', money(D.rev)], ['BURN/DAY', money(burn)], ['RUNWAY', run.toFixed(0) + ' days']].map(([k, v, c]) => `<div class="kpi"><small>${k}</small><b class="${c || ''}">${v}</b></div>`).join('');
+  $('#badge').textContent = S.pend.length + ' ACTION'; $('#badge').style.display = S.pend.length ? '' : 'none';
+}
+function table() {
+  $('#tbl').innerHTML = `<tr><th>BUSINESS</th><th>REV</th><th>COST</th><th>PROFIT</th><th>ROI</th></tr>` + [...D.biz].sort((a, b) => b.roi - a.roi).map(b => `<tr class="row ${S.sel === b.id ? 'sel' : ''}" data-id="${b.id}"><td><span style="color:${b.color}">■</span> ${b.short}</td><td>${money(b.rev)}</td><td>${money(b.cost)}</td><td class="${b.profit >= 0 ? 'pos' : 'neg'}">${signed(b.profit)}</td><td>${pct(b.roi)}</td></tr>`).join('');
+  $('#flow').innerHTML = D.biz.map(b => `<u style="width:${b.cost / D.cost * 100}%;background:${b.color}"></u>`).join('');
+  const b = bizById(S.sel);
+  $('#detail').innerHTML = `<h3 style="margin:10px 0 2px;color:${b.color}">${b.name}</h3>${b.headline}<div class="why">▲ WHY: ${b.why}</div><div class="opp">◆ OPPORTUNITY: ${b.opp}</div>${costBars(b)}`;
+}
+$('#tbl').onclick = e => { const r = e.target.closest('tr.row'); if (r) { S.sel = r.dataset.id; table(); } };
+function misc() {
+  $('#sup').innerHTML = `<div>STATE: <b style="color:#4cf">${D.supervisor.state}</b> · LOAD ${pct(D.supervisor.load)} · BUDGET LEFT ${money(S.budget)}</div><ul>${D.supervisor.decisions.map(d => `<li>${d}</li>`).join('')}</ul>`;
+  $('#fin').innerHTML = D.biz.map(b => `<h3 style="margin:8px 0 2px;color:${b.color}">${b.name} <small class="${b.profit >= 0 ? 'pos' : 'neg'}">${signed(b.profit)}</small></h3>${costBars(b)}`).join('');
+  const ranked = D.upgrades.map(u => ({ u, score: parseFloat((u.effect.match(/\d+/) || [1])[0]) / u.cost })).sort((a, b) => b.score - a.score);
+  $('#upg').innerHTML = ranked.map(({ u }) => `<div class="up"><b>${u.name}</b> (${bizById(u.biz).short}) · ${money(u.cost, 0)}<br>${u.effect} · payback ${u.payback}<br><small>${u.cost > 25 ? 'requires human approval' : 'within auto-approval rules'}</small></div>`).join('');
+  $('#agents').innerHTML = D.agents.map(agentRow).join(''); $('#quests').innerHTML = D.quests.map(questRow).join(''); $('#ev').innerHTML = D.events.map(eventRow).join('');
+  dq();
+}
+function dq() {
+  $('#dq').innerHTML = S.pend.length ? S.pend.map(p => `<div class="dq">${p.text}<br><small>spend ${money(p.cost, 0)} · tier: ${p.cost > 25 ? 'human approval' : 'confirm'}</small><br><button class="ok" data-a="${p.id}">APPROVE</button><button data-d="${p.id}">DENY</button></div>`).join('') : '<div class="detail pos">All clear — nothing needs you.</div>';
+  kpis();
+}
+$('#dq').onclick = e => { const id = e.target.dataset.a || e.target.dataset.d; if (!id) return; const p = S.pend.find(x => x.id === id); if (e.target.dataset.a && p.cost) S.budget -= p.cost; S.pend = S.pend.filter(x => x.id !== id); dq(); misc2(); };
+const misc2 = () => { $('#sup').firstChild.innerHTML = `STATE: <b style="color:#4cf">${D.supervisor.state}</b> · LOAD ${pct(D.supervisor.load)} · BUDGET LEFT ${money(S.budget)}`; };
+$('#tabs').onclick = e => { const s = e.target.dataset.s; if (!s) return; $$('#tabs button').forEach(b => b.classList.toggle('on', b === e.target)); $$('.sec').forEach(x => x.classList.toggle('on', x.id === 's-' + s)); window.scrollTo(0, 0); sizeAll(); };
+
+// holo-map: wireframe iso hub with 4 nodes
+const hc = $('#holo'), hx = hc.getContext('2d');
+const HP = { hq: [0, 0], etsy: [-95, -55], assets: [95, -55], affiliate: [-95, 65], fiverr: [95, 65] };
+const hcam = new Camera(hc, { z: 1, min: .6, max: 2.5, limit: 150, onTap: (wx, wy) => { for (const b of D.biz) { const [x, y] = HP[b.id]; if (Math.hypot(wx - x, wy - y) < 34) { S.sel = b.id; table(); } } } });
+function iso(x, y, z = 0) { return [x, y * .6 - z]; }
+function drawHolo(t) {
+  hcam.begin(hx); hx.lineWidth = 1;
+  hx.strokeStyle = '#123a5a'; for (let i = -200; i <= 200; i += 20) { hx.beginPath(); hx.moveTo(i, -140); hx.lineTo(i, 140); hx.moveTo(-200, i * .7); hx.lineTo(200, i * .7); hx.stroke(); }
+  for (const b of D.biz) { const [x, y] = HP[b.id]; hx.strokeStyle = b.status === 'loss' ? '#f55' : '#4cf'; hx.setLineDash([4, 4]); hx.lineDashOffset = -t / 50; hx.beginPath(); hx.moveTo(0, 0); hx.lineTo(x, y); hx.stroke(); hx.setLineDash([]);
+    const p = (t / 1500 + b.rev) % 1; hx.fillStyle = col(b); hx.fillRect(x * (b.status === 'loss' ? 1 - p : p) - 2, y * (b.status === 'loss' ? 1 - p : p) - 2, 4, 4); }
+  const node = (x, y, h, c, label, sel) => { const w = 26; hx.strokeStyle = c; hx.fillStyle = c + '33'; hx.beginPath(); hx.rect(x - w / 2, y - h, w, h); hx.fill(); hx.stroke(); hx.strokeRect(x - w / 2 - 3, y - h - 3, w + 6, h + 6); if (sel) { hx.beginPath(); hx.arc(x, y - h / 2, 32 + Math.sin(t / 200) * 2, 0, 7); hx.stroke(); } text(hx, label, x, y + 14, 9, '#cfe6ff'); };
+  node(0, 10, 34, '#44ccff', 'HQ·SUP', false);
+  for (const b of D.biz) { const [x, y] = HP[b.id]; node(x, y + 12, 12 + b.rev, b.color, b.short + ' ' + signed(b.profit, 0), S.sel === b.id); }
+  hcam.end(hx); requestAnimationFrame(drawHolo);
+}
+// agent network graph
+const nc = $('#net'), nx = nc.getContext('2d');
+const N = D.agents.map((a, i) => { const g = ['etsy', 'assets', 'affiliate', 'fiverr', 'shared'].indexOf(a.biz), ang = i * 2.4; return { a, x: Math.cos(ang) * (60 + g * 24), y: Math.sin(ang) * (60 + g * 18) }; });
+let nsel = null;
+const ncam = new Camera(nc, { z: 1, min: .5, max: 3, limit: 200, onTap: (wx, wy) => { nsel = N.find(n => Math.hypot(n.x - wx, n.y - wy) < 14) || null; $('#nodeinfo').innerHTML = nsel ? agentRow(nsel.a) : 'Tap a node. Edges show which agents hand work to each other.'; } });
+function drawNet(t) {
+  if (nc.offsetParent) { ncam.begin(nx); nx.lineWidth = 1;
+    N.forEach((n, i) => { const m = N[(i + 3) % N.length]; nx.strokeStyle = '#1d4b73'; nx.beginPath(); nx.moveTo(n.x, n.y); nx.lineTo(m.x, m.y); nx.stroke(); if (n.a.state === 'working') { const p = (t / 900 + i / 7) % 1; nx.fillStyle = '#4cf'; nx.fillRect(n.x + (m.x - n.x) * p - 1.5, n.y + (m.y - n.y) * p - 1.5, 3, 3); } });
+    N.forEach(n => { const c = n.a.state === 'blocked' ? '#ffbb33' : n.a.state === 'idle' ? '#6a8aa8' : n.a.biz === 'shared' ? '#c77dff' : bizById(n.a.biz).color; nx.fillStyle = c + '44'; nx.strokeStyle = c; nx.beginPath(); nx.arc(n.x, n.y, 4 + n.a.lvl * 2, 0, 7); nx.fill(); nx.stroke(); if (n === nsel) { nx.strokeStyle = '#fff'; nx.beginPath(); nx.arc(n.x, n.y, 18, 0, 7); nx.stroke(); } text(nx, n.a.role.slice(0, 4).toUpperCase(), n.x, n.y + 3, 6, '#fff'); });
+    ncam.end(nx); }
+  requestAnimationFrame(drawNet);
+}
+function sizeAll() { /* Camera uses ResizeObserver */ }
+kpis(); table(); misc(); $('#nodeinfo').textContent = 'Tap a node. Edges show which agents hand work to each other.';
+requestAnimationFrame(drawHolo); requestAnimationFrame(drawNet);
+</script></body></html>

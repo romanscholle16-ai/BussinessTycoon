@@ -1,0 +1,10 @@
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;font-family:ui-monospace,Menlo,Consolas,monospace}
+button{font:inherit;cursor:pointer}
+#labchip{position:fixed;top:calc(4px + env(safe-area-inset-top));right:4px;z-index:9999;text-align:right}
+#labchip>button{background:#000c;color:#fff;border:1px solid #fff6;border-radius:12px;padding:3px 8px;font-size:11px;min-height:26px}
+#labchip .menu{margin-top:4px;background:#000e;border:1px solid #fff5;border-radius:8px;padding:6px;display:flex;flex-direction:column;gap:2px;min-width:180px}
+#labchip .menu[hidden]{display:none}
+#labchip a{color:#fff;text-decoration:none;padding:9px 8px;font-size:13px;text-align:left;border-radius:6px}
+#labchip a.cur{background:#fff3}
+#labchip small{color:#ffd24a;padding:4px 8px;text-align:left}

@@ -4,7 +4,7 @@
 
 - [x] **PHASE 0 — Foundation & Project Control** — COMPLETE
   - Acceptance: Docs complete; smoke test passes; committed.
-- [ ] **PHASE 1 — Game Client** — Not started
+- [~] **PHASE 1 — Game Client** — IN PROGRESS (design gate: 5 prototypes ready, awaiting user choice)
   - Acceptance: Runs on Android browser; pan/zoom smooth; installable PWA; no real backend data required.
 - [ ] **PHASE 2 — Database** — Not started
   - Acceptance: Migrations apply cleanly from empty; repository tests pass.

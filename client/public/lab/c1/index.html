@@ -1,0 +1,135 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Concept 1 – Classic Tycoon</title>
+<link rel="stylesheet" href="../shared/lab.css">
+<style>
+body{background:#1b3a2e;color:#fff}
+#map{position:absolute;inset:0;width:100%;height:100%;display:block}
+.hud{position:absolute;top:calc(4px + env(safe-area-inset-top));left:4px;right:92px;display:flex;gap:4px;flex-wrap:wrap;z-index:5;pointer-events:none}
+.chip{background:#0a1f3acc;border:2px solid #7df3ff;border-radius:6px;padding:4px 8px;font-size:12px;line-height:1.2;box-shadow:0 2px 0 #000a}
+.chip b{display:block;font-size:15px}.pos{color:#7dff6b}.neg{color:#ff6b6b}
+.xpbar{height:6px;background:#000;border:1px solid #fff6;margin-top:2px;width:80px}.xpbar u{display:block;height:100%;background:#ffd24a}
+.zoom{position:absolute;right:6px;top:70px;display:flex;flex-direction:column;gap:6px;z-index:5}
+.zoom button{width:44px;height:44px;font-size:22px;background:#0a1f3a;color:#7df3ff;border:2px solid #7df3ff;border-radius:6px}
+nav{position:absolute;bottom:0;left:0;right:0;display:flex;background:#0a1f3a;border-top:2px solid #7df3ff;z-index:20;padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;background:none;border:0;color:#9ad;padding:10px 0;font-size:11px;min-height:52px}
+nav button.on{color:#ffd24a;background:#ffffff14}nav button span{display:block;font-size:20px}
+.sheet{position:absolute;left:0;right:0;bottom:56px;max-height:62%;background:#0d2747f5;border-top:3px solid #ffd24a;z-index:15;display:flex;flex-direction:column;transform:translateY(110%);transition:transform .2s;padding-bottom:env(safe-area-inset-bottom)}
+.sheet.open{transform:none}
+.sheet header{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid #fff3}
+.sheet header h2{margin:0;font-size:15px;flex:1}.sheet header .x{background:#a33;color:#fff;border:0;border-radius:4px;min-width:40px;min-height:36px}
+.tabs{display:flex}.tabs button{flex:1;background:#0006;color:#9ad;border:0;padding:10px 2px;font-size:12px;min-height:42px}.tabs button.on{background:#ffd24a;color:#000}
+.body{overflow:auto;padding:10px;-webkit-overflow-scrolling:touch}
+.full{position:absolute;inset:0 0 56px 0;background:#0d2747;z-index:12;overflow:auto;padding:calc(48px + env(safe-area-inset-top)) 12px 12px;display:none}.full.open{display:block}
+.full h2{margin:6px 0 10px;font-size:16px;color:#ffd24a}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}.kv div{background:#0006;border:1px solid #fff3;padding:6px;font-size:12px}.kv b{display:block;font-size:16px}
+.agent,.quest,.ev,.up{background:#0006;border:1px solid #fff3;padding:8px;margin-bottom:6px;font-size:12px;border-radius:4px}
+.agent .name{color:#7df3ff}.agent .meta{display:block;color:#9ab}.agent .task{display:block;margin-top:2px}.agent.st-blocked{border-color:#ff6b6b}
+.xp,.bar{display:block;height:6px;background:#000;margin:4px 0}.xp u,.bar u{display:block;height:100%;background:#7dff6b}
+.ev time{color:#ffd24a;margin-right:8px}.quest b{display:block}.quest.done{border-color:#7dff6b}.quest em{font-size:11px;color:#9ab;font-style:normal}
+.cb{display:grid;grid-template-columns:50px 1fr 54px;gap:6px;align-items:center;font-size:12px}
+.up button,.btn{background:#ffd24a;color:#000;border:0;border-radius:4px;padding:10px 12px;min-height:40px;font-weight:bold;margin-top:6px}.btn.off{background:#555;color:#999}
+.up b{display:block}.tier{font-size:11px;color:#9ab}
+.why{background:#2a1f00;border:1px solid #ffd24a;padding:8px;font-size:12px;margin-bottom:8px}
+.toast{position:absolute;top:120px;left:50%;transform:translateX(-50%);background:#ffd24a;color:#000;padding:8px 14px;border-radius:6px;z-index:30;font-size:13px;display:none;max-width:90%}
+</style></head><body>
+<canvas id="map"></canvas>
+<div class="hud" id="hud"></div>
+<div class="zoom"><button id="zi">+</button><button id="zo">−</button><button id="zc">⌖</button></div>
+<div class="sheet" id="sheet"></div>
+<div class="full" id="full"></div>
+<div class="toast" id="toast"></div>
+<nav id="nav"><button data-t="map" class="on"><span>🗺</span>MAP</button><button data-t="money"><span>💰</span>MONEY</button><button data-t="agents"><span>🤖</span>AGENTS</button><button data-t="quests"><span>⭐</span>QUESTS</button><button data-t="log"><span>📜</span>LOG</button></nav>
+<script src="../shared/data.js"></script><script src="../shared/common.js"></script>
+<script>
+labChip(1);
+const S = { sel: null, tab: 'over', nav: 'map', budget: D.budget.remaining, lv: Object.fromEntries(D.biz.map(b => [b.id, b.level])), bought: new Set(), xp: D.empire.xp };
+const T = 16;
+const POS = { hq: [0, 0, 6, 6], etsy: [-11, -9, 6, 5], assets: [11, -9, 6, 5], affiliate: [-11, 9, 6, 5], fiverr: [11, 9, 6, 5] };
+const cv = $('#map'), ctx = cv.getContext('2d');
+const cam = new Camera(cv, { z: 1.2, min: 0.5, max: 3, limit: 400, onTap: (wx, wy) => {
+  for (const id of ['etsy', 'assets', 'affiliate', 'fiverr', 'hq']) { const [cx, cy, w, h] = POS[id]; if (Math.abs(wx - cx * T) < w * T / 2 + 8 && Math.abs(wy - cy * T) < h * T / 2 + 14) { return select(id); } }
+  select(null);
+} });
+function select(id) { S.sel = id; S.tab = 'over'; if (id) { const z = Math.max(cam.z, 1.3); cam.focus(POS[id][0] * T, POS[id][1] * T + cam.h * 0.2 / z, z); } renderSheet(); }
+function toast(m) { const t = $('#toast'); t.textContent = m; t.style.display = 'block'; clearTimeout(toast.h); toast.h = setTimeout(() => t.style.display = 'none', 2600); }
+function hud() {
+  const lvl = D.empire.level, pctx = (S.xp - 0) / D.empire.next * 100;
+  $('#hud').innerHTML = `<div class="chip">BUDGET<b>${money(S.budget)}</b></div><div class="chip">NET 7d<b class="${D.net >= 0 ? 'pos' : 'neg'}">${signed(D.net)}</b></div><div class="chip">LV ${lvl} EMPIRE<div class="xpbar"><u style="width:${pctx}%"></u></div></div><div class="chip" style="${D.supervisor.approvals ? 'border-color:#ff6b6b' : ''}">⚠ ${D.supervisor.approvals} need you</div>`;
+}
+function sheetOver(b) {
+  return `<div class="kv"><div>Revenue 7d<b>${money(b.rev)}</b></div><div>Cost 7d<b>${money(b.cost)}</b></div><div>Profit<b class="${b.profit >= 0 ? 'pos' : 'neg'}">${signed(b.profit)}</b></div><div>ROI<b>${pct(b.roi)}</b></div></div>
+  <div class="why"><b>Why?</b> ${b.why}</div><div class="why" style="background:#082a1a;border-color:#7dff6b"><b>Opportunity:</b> ${b.opp}</div>
+  ${b.attention ? `<div class="why" style="border-color:#ff6b6b"><b>Needs you:</b> ${b.attention}</div>` : ''}<div>Health ${b.health}% · Queue ${b.queue} · ${b.headline}</div>`;
+}
+function upgradeRow(u) {
+  const have = S.bought.has(u.id), tier = u.cost <= 5 ? 'auto-approved' : u.cost <= 25 ? 'auto if within rules' : 'HUMAN APPROVAL';
+  return `<div class="up"><b>${u.name} — ${money(u.cost, 0)}</b>${u.effect} · payback ${u.payback}<div class="tier">spend tier: ${tier}</div>${have ? '<div class="pos">✔ Installed</div>' : `<button data-buy="${u.id}">${u.cost > 25 ? 'REQUEST APPROVAL' : 'BUY'}</button>`}</div>`;
+}
+function renderSheet() {
+  const sh = $('#sheet'); if (!S.sel) { sh.classList.remove('open'); return; }
+  if (S.sel === 'hq') {
+    sh.innerHTML = `<header><h2>🏛 Headquarters · Supervisor</h2><button class="x">✕</button></header><div class="body"><div class="kv"><div>State<b style="font-size:13px">${D.supervisor.state}</b></div><div>Load<b>${pct(D.supervisor.load)}</b></div></div><b>Supervisor decisions</b>${D.supervisor.decisions.map(d => `<div class="ev">${d}</div>`).join('')}<b>Health</b><div class="ev">${Object.entries(D.health).map(([k, v]) => k + ': ' + v).join(' · ')}</div></div>`;
+  } else {
+    const b = bizById(S.sel), tabs = [['over', 'Overview'], ['agents', 'Agents'], ['money', 'Money'], ['up', 'Upgrades']];
+    let body = S.tab === 'over' ? sheetOver(b) : S.tab === 'agents' ? D.agents.filter(a => a.biz === b.id).map(agentRow).join('') : S.tab === 'money' ? `<div class="kv"><div>Margin<b>${b.rev ? pct(b.margin) : 'n/a'}</b></div><div>Cost split</div></div>${costBars(b)}` : D.upgrades.filter(u => u.biz === b.id).map(upgradeRow).join('');
+    sh.innerHTML = `<header><h2 style="color:${b.color}">${b.name} · Lv ${S.lv[b.id]}</h2><button class="x">✕</button></header><div class="tabs">${tabs.map(([k, n]) => `<button data-tab="${k}" class="${S.tab === k ? 'on' : ''}">${n}</button>`).join('')}</div><div class="body">${body}</div>`;
+  }
+  sh.classList.add('open');
+}
+$('#sheet').addEventListener('click', e => {
+  const t = e.target;
+  if (t.classList.contains('x')) select(null);
+  if (t.dataset.tab) { S.tab = t.dataset.tab; renderSheet(); }
+  if (t.dataset.buy) {
+    const u = D.upgrades.find(x => x.id === t.dataset.buy);
+    if (u.cost > 25) return toast('Sent to your approval queue (cost > $25 needs a human)');
+    if (u.cost > S.budget) return toast('Not enough budget');
+    S.budget -= u.cost; S.bought.add(u.id); S.lv[u.biz]++; S.xp += 25; hud(); renderSheet(); toast(`Installed: ${u.name}. Expected: ${u.effect}`);
+  }
+});
+function full(t) {
+  const f = $('#full'); f.classList.toggle('open', t !== 'map'); if (t === 'map') return;
+  if (t === 'money') f.innerHTML = `<h2>Finance · 7 days</h2><div class="kv"><div>Revenue<b>${money(D.rev)}</b></div><div>Costs<b>${money(D.cost)}</b></div><div>Net profit<b class="${D.net >= 0 ? 'pos' : 'neg'}">${signed(D.net)}</b></div><div>Budget left<b>${money(S.budget)} / $100</b></div></div>${D.biz.map(b => `<div class="up"><b style="color:${b.color}">${b.name}</b>Rev ${money(b.rev)} · Cost ${money(b.cost)} · <span class="${b.profit >= 0 ? 'pos' : 'neg'}">${signed(b.profit)}</span> · ROI ${pct(b.roi)}<i class="bar"><u style="width:${Math.min(100, b.rev / (b.cost || 1) * 50)}%;background:${b.profit >= 0 ? '#7dff6b' : '#ff6b6b'}"></u></i></div>`).join('')}`;
+  if (t === 'agents') f.innerHTML = `<h2>Agents</h2>${D.agents.map(agentRow).join('')}`;
+  if (t === 'quests') f.innerHTML = `<h2>Quests (from real achievements)</h2>${D.quests.map(questRow).join('')}`;
+  if (t === 'log') f.innerHTML = `<h2>Event timeline</h2>${D.events.map(eventRow).join('')}`;
+}
+$('#nav').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; $$('#nav button').forEach(x => x.classList.toggle('on', x === b)); S.nav = b.dataset.t; if (S.nav !== 'map') select(null); full(S.nav); });
+$('#zi').onclick = () => cam.zoomBy(1.3); $('#zo').onclick = () => cam.zoomBy(1 / 1.3); $('#zc').onclick = () => cam.focus(0, 0, cam.fitZ());
+
+// ---- rendering (pixel look: shaded blocks, snapped coordinates) ----
+const R = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); };
+function ground(v) {
+  const x0 = Math.floor(v.x0 / T) - 1, x1 = Math.ceil(v.x1 / T) + 1, y0 = Math.floor(v.y0 / T) - 1, y1 = Math.ceil(v.y1 / T) + 1;
+  for (let gx = x0; gx < x1; gx++) for (let gy = y0; gy < y1; gy++) {
+    const n = hash(gx, gy), road = (gx === 0 || gy === 0) && Math.abs(gx) < 20 && Math.abs(gy) < 20 || (Math.abs(gx) === 11 && Math.abs(gy) <= 9) || (Math.abs(gy) === 9 && Math.abs(gx) <= 11);
+    if (road) { R(gx * T - 8, gy * T - 8, T, T, '#3b4660'); if ((gx + gy) % 2 === 0) R(gx * T - 1, gy * T - 1, 2, 2, '#ffd24a88'); }
+    else { R(gx * T - 8, gy * T - 8, T, T, n > .7 ? '#2f7a4d' : n > .3 ? '#2a6f46' : '#256a40'); if (n > .93) R(gx * T - 2, gy * T - 2, 4, 4, '#1c5a35'); }
+  }
+}
+function building(id, t) {
+  const [cx, cy, w, h] = POS[id], x = cx * T - w * T / 2, y = cy * T - h * T / 2, W = w * T, H = h * T;
+  const b = id === 'hq' ? { color: '#ffd24a', name: 'HQ', status: 'profit' } : bizById(id);
+  const floors = id === 'hq' ? 3 : S.lv[id] + 1, fh = 9, top = floors * fh, sel = S.sel === id;
+  R(x + 4, y + H - 2, W, 6, '#0006');
+  R(x, y + H - 4 - 0, W, 4, '#222');
+  R(x, y + 6 - top + (H - 10), W, top + 4, shade(b.color, -.45)); // front wall
+  for (let f = 0; f < floors; f++) for (let k = 0; k < w - 1; k++) R(x + 6 + k * 14, y + H - 10 - f * fh - 6 + 6 - top + top, 6, 5, (t / 700 + k + f) % 5 < 4 ? '#bff' : '#355');
+  R(x - 2, y + 4 - top + (H - 10) - 6, W + 4, 8, shade(b.color, .0)); // roof slab
+  R(x, y + 4 - top + (H - 10) - 6, W, 3, shade(b.color, .35));
+  R(x + W / 2 - 5, y + H - 14, 10, 10, '#123'); // door
+  if (id !== 'hq' && S.lv[id] >= 3) { R(x + 6, y - top + H - 22, 8, 8, '#7df3ff'); R(x + 8, y - top + H - 26, 4, 4, '#fff'); }
+  if (id === 'hq') { R(x + W / 2 - 2, y - top + H - 36, 4, 26, '#9ad'); R(x + W / 2 - 5, y - top + H - 40, 10, 6, '#ff6b6b'); }
+  const bob = Math.sin(t / 300 + cx) * 2, bx = x + W / 2, by = y - top + H - 30 + bob;
+  if (id !== 'hq') { const ic = b.status === 'loss' ? ['!', '#ff6b6b'] : b.status === 'watch' ? ['?', '#ffd24a'] : ['$', '#7dff6b']; R(bx - 8, by - 12, 16, 16, '#000'); R(bx - 7, by - 11, 14, 14, ic[1]); text(ctx, ic[0], bx, by + 1, 12, '#000'); }
+  text(ctx, b.name.toUpperCase().slice(0, 18), bx, y + H + 14, 8, '#fff'); if (sel) { ctx.strokeStyle = '#ffd24a'; ctx.lineWidth = 2; ctx.strokeRect(x - 5, y - top + H - 30, W + 10, top + 36); }
+}
+function shade(hex, a) { const n = parseInt(hex.slice(1), 16), f = c => clamp(Math.round(a < 0 ? c * (1 + a) : c + (255 - c) * a), 0, 255); return `rgb(${f(n >> 16)},${f((n >> 8) & 255)},${f(n & 255)})`; }
+const cars = Array.from({ length: 8 }, (_, i) => ({ i, d: i * 40 }));
+function frame(t) {
+  cam.begin(ctx); const v = cam.view(); ground(v);
+  cars.forEach(c => { const p = (t / 40 + c.d * 9) % 160 - 80, lane = c.i % 2 ? 1 : -1; const [ax, ay] = c.i % 4 < 2 ? [p, lane * 3] : [lane * 3, p]; R(ax, ay, 7, 4, ['#ff6b6b', '#7df3ff', '#ffd24a', '#c77dff'][c.i % 4]); });
+  ['etsy', 'assets', 'hq', 'affiliate', 'fiverr'].forEach(id => building(id, t));
+  cam.end(ctx); requestAnimationFrame(frame);
+}
+cam.fitZ = () => clamp(Math.min(cam.w / 400, (cam.h - 140) / 400), .5, 1.6); cam.focus(0, 0, cam.fitZ()); hud(); requestAnimationFrame(frame);
+</script></body></html>
