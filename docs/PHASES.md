@@ -32,7 +32,7 @@ Status vocabulary: `not started`, `in progress`, `completed`, `blocked`, `deferr
 ## PHASE 5 — Observability
 - Scope: Structured logs, event timeline, task/agent history, audit trail, health.
 - Acceptance: Every task emits events with IDs; timeline queryable via API.
-- Status: not started
+- Status: completed
 
 ## PHASE 6 — AI Providers
 - Scope: Provider abstraction (Claude, Freebuff, OpenAI, Ollama), failover, image provider (GPT Images 2.5 preferred).

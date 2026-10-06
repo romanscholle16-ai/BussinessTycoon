@@ -2,12 +2,12 @@ import { DEMO } from './data/mock.js';
 import { $, $$ } from './util.js';
 import { Camera } from './camera.js';
 import { GRID, iso, hitTest, drawWorld } from './world.js';
-import { kpiBar, bizPanel, modePanel } from './ui.js';
+import { kpiBar, bizPanel, modePanel, healthPill } from './ui.js';
 import { evaluateSpend } from './rules.js';
 
 // Data source seam: Phase 2+ replaces this with the real API; the UI only sees a snapshot object.
 const D = { ...DEMO, rules: { autoMaxUsd: 5, rulesMaxUsd: 25 } };
-const S = { mode: 'city', sel: null, tab: 'why', budget: D.budget.remaining, done: new Set(), inst: new Set(), levels: {}, layers: { flow: true }, live: null };
+const S = { mode: 'city', sel: null, tab: 'why', budget: D.budget.remaining, done: new Set(), inst: new Set(), levels: {}, layers: { flow: true }, live: null, logFilter: { sev: 'info', comp: '', steps: false } };
 
 const cv = $('#world'), ctx = cv.getContext('2d');
 const fit = () => Math.max(0.5, Math.min(1.5, Math.min(cam.w / 600, (cam.h - 190) / 330)));
@@ -28,7 +28,11 @@ function setDock(m) { $$('#dock button').forEach((b) => { const on = b.dataset.m
 
 document.addEventListener('click', (e) => {
   const t = e.target, d = t.dataset;
-  if (d.m) { S.mode = d.m; if (d.m !== 'city') S.sel = null; setDock(d.m); render(); }
+  if (d.m) { S.mode = d.m; if (d.m !== 'city') S.sel = null; setDock(d.m); render(); if (d.m === 'log' || d.m === 'agents') pollLive(); }
+  if (d.open === 'hq') { S.sel = 'hq'; S.mode = 'city'; setDock('city'); render(); }
+  if (d.lfSev !== undefined) { S.logFilter.sev = d.lfSev; render(); pollLive(); }
+  if (d.lfSteps !== undefined) { S.logFilter.steps = d.lfSteps === '1'; render(); }
+  if (d.lfComp !== undefined) { S.logFilter.comp = d.lfComp; render(); pollLive(); }
   if (d.x !== undefined) { S.sel = null; render(); }
   if (d.t) { S.tab = d.t; render(); }
   if (d.ok) { S.done.add(d.ok); render(); }
@@ -43,12 +47,20 @@ document.addEventListener('click', (e) => {
   if (d.zoom) cam.zoomBy(d.zoom === 'in' ? 1.3 : 1 / 1.3);
   if (d.zoom === 'fit') cam.focus(0, 20, fit());
 });
+const getJson = async (u) => { const r = await fetch(u, { headers: { accept: 'application/json' } }); if (!r.ok) throw new Error(String(r.status)); return r.json(); };
+/** Polls only what is needed: health + Supervisor always; events/agents only while their panel is open. Paused while the tab is hidden. */
 async function pollLive() {
-  try { const [a, b] = await Promise.all([fetch('/api/supervisor/status'), fetch('/api/supervisor/decisions?limit=5')]); if (!a.ok || !b.ok) throw new Error('unavailable'); S.live = { status: (await a.json()).supervisor, decisions: (await b.json()).decisions }; }
-  catch { S.live = null; }
-  if (S.sel === 'hq') render();
+  if (document.hidden) return;
+  try {
+    const [h, a, b] = await Promise.all([getJson('/api/system/health'), getJson('/api/supervisor/status').catch(() => null), getJson('/api/supervisor/decisions?limit=5').catch(() => null)]);
+    S.live = { ...(S.live ?? {}), health: h.data, status: a?.supervisor ?? null, decisions: b?.decisions ?? [] };
+    if (S.mode === 'log') { const f = S.logFilter, q = new URLSearchParams({ limit: '80', minSeverity: f.sev }); if (f.comp) q.set('component', f.comp); S.live.events = { events: (await getJson('/api/activity?' + q)).data.events }; }
+    if (S.mode === 'agents') S.live.agents = (await getJson('/api/agents')).agents;
+  } catch { S.live = null; }
+  $('#health-pill').innerHTML = healthPill(S.live);
+  if (S.sel === 'hq' || ['log', 'agents'].includes(S.mode)) render();
 }
-pollLive(); setInterval(pollLive, 5000);
+pollLive(); setInterval(pollLive, 5000); document.addEventListener('visibilitychange', () => { if (!document.hidden) pollLive(); });
 function frame(t) { drawWorld(ctx, cam, t, { biz: D.biz, selected: S.sel, layers: S.layers, levels: S.levels }); requestAnimationFrame(frame); }
 cam.focus(0, 20, fit()); render(); requestAnimationFrame(frame);
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) navigator.serviceWorker.register('/sw.js').catch(() => {});

@@ -39,7 +39,7 @@ test('world hit-testing selects the tower under a point', () => {
 
 test('panels render for every business and mode without throwing', () => {
   const D = { ...DEMO, rules: { autoMaxUsd: 5, rulesMaxUsd: 25 } };
-  const S = { mode: 'city', sel: null, tab: 'why', budget: D.budget.remaining, done: new Set(), inst: new Set(), levels: {} };
+  const S = { mode: 'city', sel: null, tab: 'why', budget: D.budget.remaining, done: new Set(), inst: new Set(), levels: {}, live: null, logFilter: { sev: 'info', comp: '', steps: false } };
   assert.match(kpiBar(D, S), /NET 7D/);
   for (const id of ['hq', ...D.biz.map((b) => b.id)]) for (const tab of ['why', 'cost', 'agents', 'up']) { S.tab = tab; assert.ok(bizPanel(D, S, id).length > 50); }
   for (const m of ['biz', 'agents', 'money', 'todo', 'log']) assert.ok(modePanel(D, S, m).length > 50, m);

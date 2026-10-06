@@ -123,7 +123,7 @@ export class TaskQueue {
   renewLease(taskId, ms = this.leaseMs) { return this.db.run("UPDATE tasks SET lease_expires_at = ? WHERE id = ? AND status IN ('assigned','running')", [this.iso(ms), taskId]).changes === 1; }
 
   #event(t, type, action, meta, error = null) {
-    this.repos.events.insert({ ts: this.iso(), type, severity: type === 'task.failed' ? 'error' : 'info', business_id: t.business_id, agent_id: t.agent_id, task_id: t.id, action, result: type.split('.')[1], error, metadata: { ...meta, priority: t.priority, retry_count: t.retry_count }, data_mode: t.data_mode });
+    this.repos.events.insert({ ts: this.iso(), type, severity: type === 'task.failed' ? 'error' : (type === 'task.retrying' || /^released/.test(action)) ? 'warn' : 'info', business_id: t.business_id, agent_id: t.agent_id, task_id: t.id, action, result: type.split('.')[1], error, metadata: { ...meta, priority: t.priority, retry_count: t.retry_count }, data_mode: t.data_mode });
   }
 }
 export { TASK_TERMINAL };

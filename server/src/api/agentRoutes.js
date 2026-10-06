@@ -1,6 +1,8 @@
 // Minimal Agent OS inspection API + demo-task controls. Read-only except demo tasks (data_mode='demo', never in production).
 import { isId, ValidationError } from '../agents/validate.js';
 import { InvalidTransitionError } from '../agents/states.js';
+import { createLogger } from '../observability/logger.js';
+const log = createLogger('api');
 
 const MAX_BODY = 16 * 1024;
 const send = (res, code, body) => { res.writeHead(code, { 'content-type': 'application/json' }); res.end(JSON.stringify(body)); };
@@ -51,7 +53,7 @@ export async function handleAgentApi(req, res, config, services) {
     } catch (e) {
       if (e instanceof ValidationError) return err(res, 400, 'validation', e.message), true;
       if (e instanceof InvalidTransitionError) return err(res, 409, 'invalid_transition', e.message), true;
-      console.error(JSON.stringify({ level: 'error', msg: 'api_error', error: String(e.message).slice(0, 200) })); return err(res, 500, 'internal', 'internal error'), true;
+      log.error('api_error', { path: path.replace(/[^\w/-]/g, '').slice(0, 80), error: e }); return err(res, 500, 'internal', 'internal error'), true;
     }
   }
   const os = services.agentOS;
@@ -97,7 +99,7 @@ export async function handleAgentApi(req, res, config, services) {
   } catch (e) {
     if (e instanceof ValidationError) return err(res, 400, 'validation', e.message), true;
     if (e instanceof InvalidTransitionError) return err(res, 409, 'invalid_transition', e.message), true;
-    console.error(JSON.stringify({ level: 'error', msg: 'api_error', error: String(e.message).slice(0, 200) }));
+    log.error('api_error', { path: path.replace(/[^\w/-]/g, '').slice(0, 80), error: e });
     return err(res, 500, 'internal', 'internal error'), true;
   }
 }

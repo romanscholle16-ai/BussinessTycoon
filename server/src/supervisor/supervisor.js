@@ -19,13 +19,13 @@ export class Supervisor {
     this.state = 'stopped'; this.runId = null; this.seq = 0; this.timer = null; this.cycling = null; this.inflight = new Set();
     this.seen = new Map(); this.recoveryAttempts = {}; this.activeLimits = new Set(); this.failures = 0;
     this.counters = { cycles: 0, dispatched: 0, skipped: 0, recoveries: 0, decisions: 0, cycleFailures: 0 };
-    this.lastCycle = null; this.lastCheckpointAt = 0; this.startedAt = null; this.previousRun = null;
+    this.lastCycle = null; this.lastOkAt = null; this.stateSince = null; this.lastCheckpointAt = 0; this.startedAt = null; this.previousRun = null;
   }
   get now() { return this.clock.now().getTime(); }
   iso() { return this.clock.now().toISOString(); }
 
   // ---------- lifecycle ----------
-  #set(to, why) { assertSupervisorTransition(this.state, to); const from = this.state; this.state = to; this.repos.events.insert({ ts: this.iso(), type: 'supervisor.lifecycle', severity: to === 'failed' ? 'error' : 'info', action: to, result: why ?? to, metadata: { from, to, runId: this.runId, instanceId: this.instanceId }, data_mode: 'live' }); }
+  #set(to, why) { assertSupervisorTransition(this.state, to); const from = this.state; this.state = to; this.stateSince = this.iso(); this.repos.events.insert({ ts: this.iso(), type: 'supervisor.lifecycle', severity: to === 'failed' ? 'critical' : 'info', action: to, result: why ?? to, metadata: { from, to, runId: this.runId, instanceId: this.instanceId }, data_mode: 'live' }); }
 
   async start({ loop = true } = {}) {
     assertSupervisorTransition(this.state, 'starting');
@@ -53,7 +53,7 @@ export class Supervisor {
     this.#set('stopped'); this.#checkpoint(true, true); this.store.release(this.instanceId);
     return this.status();
   }
-  #fail(reason) { this.#clearTimer(); try { this.#set('failed', reason); } catch { /* already terminal */ } this.#decide('supervisor.failed', { severity: 'error', reason, result: 'failed' }); this.#checkpoint(true); this.store.release(this.instanceId); }
+  #fail(reason) { this.#clearTimer(); try { this.#set('failed', reason); } catch { /* already terminal */ } this.#decide('supervisor.failed', { severity: 'critical', reason, result: 'failed' }); this.#checkpoint(true); this.store.release(this.instanceId); }
   #clearTimer() { if (this.timer) { clearTimeout(this.timer); this.timer = null; } }
   #schedule(ms) {
     this.#clearTimer(); if (this.state !== 'running' && this.state !== 'paused') return;
@@ -94,10 +94,10 @@ export class Supervisor {
         this.#decide('task.dispatched', { task: res.task, agentId: d.agentId, reason: 'selected by scheduling policy', meta: { rank: d.rank, agentChoice: d.agentChoice } });
         this.#track(res.done);
       }
-      for (const s of plan.skipped) if (s.reason === 'no_compatible_agent') { summary.skipped++; this.counters.skipped++; this.#decide('task.skipped', { task: this.#t(snap, s.taskId), result: 'skipped', reason: s.reason, meta: { detail: s.detail }, dedupe: `skip:${s.taskId}:${s.reason}` }); }
+      for (const s of plan.skipped) if (s.reason === 'no_compatible_agent') { summary.skipped++; this.counters.skipped++; this.#decide('task.skipped', { severity: 'warn', task: this.#t(snap, s.taskId), result: 'skipped', reason: s.reason, meta: { detail: s.detail }, dedupe: `skip:${s.taskId}:${s.reason}` }); }
       for (const l of plan.limits) if (!this.activeLimits.has(l)) this.#decide('limit.reached', { severity: 'warn', result: 'limited', reason: l, meta: { limits: this.cfg.limits } });
       this.activeLimits = new Set(plan.limits); summary.limits = plan.limits;
-      this.failures = 0; this.lastCycle = { ...summary, at: this.iso(), ok: true, queue: snap.queue };
+      this.failures = 0; this.lastCycle = { ...summary, at: this.iso(), ok: true, queue: snap.queue }; this.lastOkAt = this.lastCycle.at;
       this.#checkpoint(false, false, summary.dispatched.length > 0 || recovered > 0);
       return summary;
     } catch (e) {
@@ -112,11 +112,11 @@ export class Supervisor {
   // ---------- recovery (non-destructive; uses Agent OS lifecycle/queue APIs; infrastructure recovery never consumes a retry) ----------
   async #recover(snap) {
     const os = this.os, q = os.queue; let n = 0; const guard = async (fn) => { try { await fn(); n++; this.counters.recoveries++; } catch (e) { if (e?.code !== 'invalid_transition') this.#decide('recovery.failed', { severity: 'error', result: 'failed', reason: String(e.message).slice(0, 200) }); } };
-    for (const id of [...snap.stale.expiredLeases].sort()) await guard(() => { const t = q.release(id, 'lease expired (supervisor)'); this.#decide('recovery.lease_released', { task: t, result: 'requeued', reason: 'assignment lease expired before the task started', meta: { retryConsumed: false } }); });
-    for (const id of [...snap.stale.orphanedRunning].sort()) await guard(() => { const t = q.release(id, 'no live executor (supervisor)'); this.#decide('recovery.task_interrupted', { task: t, result: 'requeued', reason: 'task marked running but nothing is executing it', meta: { retryConsumed: false } }); });
+    for (const id of [...snap.stale.expiredLeases].sort()) await guard(() => { const t = q.release(id, 'lease expired (supervisor)'); this.#decide('recovery.lease_released', { severity: 'warn', task: t, result: 'requeued', reason: 'assignment lease expired before the task started', meta: { retryConsumed: false } }); });
+    for (const id of [...snap.stale.orphanedRunning].sort()) await guard(() => { const t = q.release(id, 'no live executor (supervisor)'); this.#decide('recovery.task_interrupted', { severity: 'warn', task: t, result: 'requeued', reason: 'task marked running but nothing is executing it', meta: { retryConsumed: false } }); });
     // Overdue tasks that a live executor still holds: abort them; the runtime fails them with the retryable `timeout` error.
     // (Overdue tasks with no executor were already requeued above as orphans: infrastructure loss, not an execution failure.)
-    for (const id of [...snap.stale.timedOut].sort()) if (os.isInflight(id)) await guard(() => { os.abortTask(id, new TaskError('timeout', 'exceeded timeout (supervisor)', { retryable: true })); this.#decide('recovery.task_timeout', { task: q.get(id), result: 'abort_requested', reason: 'running task exceeded its timeout', meta: { retryConsumed: true } }); });
+    for (const id of [...snap.stale.timedOut].sort()) if (os.isInflight(id)) await guard(() => { os.abortTask(id, new TaskError('timeout', 'exceeded timeout (supervisor)', { retryable: true })); this.#decide('recovery.task_timeout', { severity: 'warn', task: q.get(id), result: 'abort_requested', reason: 'running task exceeded its timeout', meta: { retryConsumed: true } }); });
     const compatibleWork = (a) => snap.candidates.some((t) => incompatibility(a, t, os.handlers) === null);
     const agentById = new Map(snap.agents.map((a) => [a.id, a]));
     const targets = [];
@@ -140,7 +140,7 @@ export class Supervisor {
       if (a.status === 'failed') this.os.registry.transition(id, 'stopped', { reason: 'supervisor recovery' });
       else if (['ready', 'running', 'blocked'].includes(a.status)) await rt.stop({ graceMs: this.os.settings.stopGraceMs });
       await rt.start();
-      this.#decide('recovery.agent_restarted', { agentId: id, result: 'ready', reason: cause, meta: { attempt: attempts.length + 1, previousStatus: a.status } });
+      this.#decide('recovery.agent_restarted', { severity: 'warn', agentId: id, result: 'ready', reason: cause, meta: { attempt: attempts.length + 1, previousStatus: a.status } });
       return true;
     } catch (e) { this.#decide('recovery.agent_restart_failed', { severity: 'error', agentId: id, result: 'failed', reason: String(e.message).slice(0, 200), meta: { cause } }); return false; }
   }
@@ -163,7 +163,7 @@ export class Supervisor {
 
   status() {
     return { state: this.state, runId: this.runId, instanceId: this.instanceId, cycle: this.seq, lastCycle: this.lastCycle, counters: { ...this.counters }, inFlight: this.inflight.size, activeLimits: [...this.activeLimits], previousRun: this.previousRun,
-      config: { pollMs: this.cfg.pollMs, limits: this.cfg.limits, scheduling: this.cfg.scheduling, recovery: this.cfg.recovery }, startedAt: this.startedAt };
+      config: { pollMs: this.cfg.pollMs, limits: this.cfg.limits, scheduling: this.cfg.scheduling, recovery: this.cfg.recovery }, startedAt: this.startedAt, stateSince: this.stateSince, lastOkCycleAt: this.lastOkAt };
   }
   decisions({ limit = 50, kind = null, sinceTs = null } = {}) {
     const f = ["type IN ('supervisor.decision','supervisor.lifecycle')"], p = [];

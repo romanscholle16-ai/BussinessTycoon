@@ -1,15 +1,16 @@
 {
   "project": "Autonomous Tycoon",
-  "currentPhase": 4,
+  "currentPhase": 5,
   "phaseStatus": "complete",
   "completedPhases": [
     0,
     1,
     2,
     3,
-    4
+    4,
+    5
   ],
-  "nextAuthorizedPhase": 5,
+  "nextAuthorizedPhase": 6,
   "phases": [
     {
       "id": 0,
@@ -39,7 +40,7 @@
     {
       "id": 5,
       "name": "Observability",
-      "status": "not_started"
+      "status": "complete"
     },
     {
       "id": 6,
@@ -144,7 +145,7 @@
   ],
   "lastValidation": {
     "command": "npm test",
-    "result": "pass (58 tests)"
+    "result": "pass (74 tests)"
   },
   "lastCommit": "see git log",
   "blocked": [],
@@ -157,7 +158,7 @@
   },
   "database": {
     "engine": "node:sqlite",
-    "schemaVersion": 3
+    "schemaVersion": 4
   },
   "agentOs": {
     "demoAgents": 5,
@@ -166,5 +167,10 @@
   "supervisor": {
     "implemented": true,
     "migration": false
+  },
+  "observability": {
+    "implemented": true,
+    "readOnly": true,
+    "migration": "0004 indexes only"
   }
 }

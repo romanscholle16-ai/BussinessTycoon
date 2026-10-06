@@ -3,6 +3,8 @@ import { AgentRegistry, systemClock } from './registry.js';
 import { TaskQueue } from './queue.js';
 import { HandlerRegistry, demoHandlers } from './handlers.js';
 import { AgentRuntime } from './runtime.js';
+import { createLogger } from '../observability/logger.js';
+const log = createLogger('agent-os');
 
 export class AgentOS {
   constructor({ db, repos, clock = systemClock, handlers = demoHandlers(new HandlerRegistry()), config = {} }) {
@@ -52,7 +54,7 @@ export class AgentOS {
   isInflight(taskId) { return this.inflight.has(taskId); }
   startHeartbeats() { this.heartbeatsOn = true; for (const a of this.registry.list({ status: 'ready' })) this.runtime(a.id).startHeartbeatTimer(); }
   async runUntilIdle({ maxSteps = 100 } = {}) { const all = []; for (let i = 0; i < maxSteps; i++) { const d = await this.step(); if (!d.length) break; all.push(...d); } return all; }
-  startLoop() { if (this.loop) return; const tick = async () => { try { await this.step(); } catch (e) { console.error(JSON.stringify({ level: 'error', msg: 'agent_loop_error', error: String(e.message).slice(0, 200) })); } this.loop = setTimeout(tick, this.settings.pollMs); this.loop.unref?.(); }; this.loop = setTimeout(tick, 0); this.loop.unref?.(); this.startHeartbeats(); }
+  startLoop() { if (this.loop) return; const tick = async () => { try { await this.step(); } catch (e) { log.error('agent_loop_error', { error: e }); } this.loop = setTimeout(tick, this.settings.pollMs); this.loop.unref?.(); }; this.loop = setTimeout(tick, 0); this.loop.unref?.(); this.startHeartbeats(); }
   stopLoop() { if (this.loop) { clearTimeout(this.loop); this.loop = null; } }
   async shutdown() { this.stopLoop(); await this.stopAll(); }
 

@@ -25,3 +25,9 @@
 - `server/src/supervisor/`: lifecycle, single-instance lock, control loop, observation, deterministic scheduling policy with aging/fairness, limits, recovery, decisions, checkpoints. Agent OS extended with targeted dispatch. Phase 3 fixes: clock-based `created_at`, abort-reason classification.
 - API: `/api/supervisor/status`, `/decisions`, demo pause/resume. Server starts/stops the Supervisor. Iso Command Hub HQ panel shows live Supervisor status and recent decisions (minimal change).
 - Tests: tests/supervisor.test.js (20 tests). No migration.
+
+## Phase 5 — Observability
+- `server/src/observability/` (severity, sanitizing, strict query parsing, event/trace/error queries, deterministic health, windowed metrics, structured logger); `/api/system/health`, `/api/system/metrics`, `/api/events[/:id]`, `/api/errors`, `/api/activity`; richer `/api/health`.
+- Migration 0004 (indexes only). Producer severity rules (retry/release/recovery = warning, Supervisor failed = critical). Console logging replaced by the structured logger. Supervisor status gained `stateSince`/`lastOkCycleAt`.
+- Iso Command Hub: health pill, live HQ health + Supervisor, real event timeline, real agent roster (design unchanged).
+- Tests: tests/observability.test.js (16 tests).

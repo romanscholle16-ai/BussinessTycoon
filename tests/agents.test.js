@@ -351,7 +351,7 @@ test('migration 0003 upgrades a populated version-2 database and maps old states
     db.run("INSERT INTO tasks (id, type, status, agent_id, business_id, data_mode) VALUES ('t1','x','succeeded','oa','etsy','test'), ('t2','x','waiting_approval','oa',NULL,'test'), ('t3','x','queued',NULL,NULL,'test')");
     db.run("INSERT INTO events (id, type, action, agent_id, task_id, data_mode) VALUES ('e1','t','a','oa','t1','test')");
     db.run("INSERT INTO approvals (id, request_type, action, task_id, data_mode) VALUES ('ap1','spend','x','t2','test')");
-    const r = migrate(db, ms); assert.deepEqual(r.ran, [3]);
+    const r = migrate(db, ms); assert.deepEqual(r.ran.slice(0, 1), [3], 'upgrade continues past 0003 to the latest version');
     assert.equal(db.pragma('foreign_keys'), 1, 'FK enforcement restored after the rebuild');
     const st = Object.fromEntries(db.all('SELECT id, status FROM agents').map((x) => [x.id, x.status])); assert.deepEqual(st, { oa: 'running', ob: 'ready', oc: 'created', od: 'paused' });
     const ts = Object.fromEntries(db.all('SELECT id, status FROM tasks').map((x) => [x.id, x.status])); assert.deepEqual(ts, { t1: 'completed', t2: 'blocked', t3: 'queued' });

@@ -61,3 +61,6 @@ SQLite cannot alter CHECK constraints, so `agents` and `tasks` were rebuilt (dat
 
 ## Phase 4: no schema change
 The Supervisor reuses existing storage: run state and the single-instance lock in `checkpoints` (scope `supervisor`, keys `state` and `lock`), decisions and lifecycle in append-only `events` (`supervisor.decision` / `supervisor.lifecycle`, indexed by `(type, ts)`), process identity in `process_runs`. The schema stays at version 3 (a test asserts this). Task `metadata.estimatedCostMinor` (validated non-negative integer) is the only cost input.
+
+## Phase 5: migration `0004_observability_indexes` (indexes only)
+`idx_events_task (task_id, ts)`, `idx_events_agent (agent_id, ts)`, `idx_events_severity (severity, ts)` (partial on non-null ids where applicable) and `idx_tasks_completed (completed_at)`, each justified by an observability query (task/agent traces, severity/error views, windowed task metrics). No table or data change; tested by upgrading a populated version-3 database (integrity and foreign keys verified, events untouched). The `events` schema already carried everything needed (correlation/retry/parent come from joining `tasks`); severity storage keeps `warn`, exposed as `warning`. Measured on 100,000 events + 20,000 tasks: default event list 0.5 ms, error view ~25 ms, health ~11 ms, 1 h metrics ~2 ms, 24 h metrics ~23 ms.

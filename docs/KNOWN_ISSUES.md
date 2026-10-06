@@ -23,3 +23,9 @@
 | KI-021 | Supervisor is single-process; lock lease (15 s) means a hung-but-alive instance is only displaced after the lease expires | by design |
 | KI-022 | Only the HQ panel shows live Supervisor data; the rest of the UI is mock until Phase 5 | Phase 5 |
 | KI-023 | `maxEstimatedCostPerCycleMinor` uses optional task estimates only; there is no real cost accounting yet | Phase 12 |
+| KI-024 | Events are never pruned; the table grows without bound (indexes keep queries fast: see DATABASE_SPECIFICATION) | retention policy in BACKLOG (Phase 24) |
+| KI-025 | `error.code`/`retryable` are inferred from the `code: message` convention and current task state; free-text errors show `code: null` | acceptable until a typed error taxonomy exists |
+| KI-026 | Health `events` rule counts error events, so a burst of ordinary demo task failures can mark the system degraded for 15 minutes | by design (thresholds configurable) |
+| KI-027 | UI polls every 5 s and does not stream; the timeline can lag up to 5 s | SSE later |
+| KI-028 | Per-agent windowed metrics come from `tasks`; agent counters in `agents.metrics_json` are all-time only | acceptable |
+| KI-029 | Dashboard KPIs, towers, finance, quests and business tabs are still mock (labelled) | later phases |

@@ -116,5 +116,8 @@ Appended to `events` (`type='supervisor.decision'`, lifecycle changes `type='sup
 ## Checkpoint (`checkpoints('supervisor','state')`)
 Run id, state, last cycle seq/time/ok, counters, recovery attempt history, last 200 dedupe keys, config snapshot, `cleanShutdown`. Written on lifecycle changes, after cycles that acted, and at most every `checkpointIntervalMs` (5 s) otherwise. On start, `cleanShutdown=false` with an active state ⇒ the previous run was interrupted: a `supervisor.resumed_after_interruption` decision is recorded, the sequence/recovery history/dedupe set resume, and the normal recovery rules requeue anything the dead process left half-done.
 
+## Severity changes made in Phase 5
+Retry scheduled, task released after interruption, recovery actions, skipped (unservable) tasks and limit hits are `warning`; the Supervisor entering `failed` is `critical`; terminal task failures and escalations stay `error`.
+
 ## Not in Phase 4
 Approvals/human control (Phase 20), budgets in money (Phase 12), ROI-based allocation (Phase 16), agent creation (Phase 18), multi-process scheduling, per-business quotas, automatic failing of permanently unservable tasks.

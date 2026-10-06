@@ -41,3 +41,16 @@ Errors: 400 `validation`, 403 `forbidden`, 404 `not_found`, 409 `invalid_transit
 | `GET /api/supervisor/decisions?limit=&kind=&since=` | newest-first decisions/lifecycle events: `{id, ts, kind, severity, result, businessId, agentId, taskId, details}`; `limit` 1–200 (default 50), `kind` like `task.dispatched`, `since` ISO date; bad values → 400 |
 | `POST /api/demo/supervisor/pause` · `/resume` | development controls; 409 on an invalid transition; **403 in production** |
 No endpoint can dispatch, assign, recover, or change limits directly; clients cannot bypass Agent OS permissions.
+
+## Phase 5 additions (Observability) — read-only
+`/api/health` (fast, small): `{status:"ok" (HTTP server), health:"healthy|degraded|critical|unknown", issues, phase:5, env, database{status,schemaVersion,latestVersion,pendingMigrations}, supervisor{state,health}, agentOS{total,available,health}}`.
+New endpoints use the envelope `{ok:true, timestamp, data, meta:{phase,…}}`; errors are `{ok:false, error, message, timestamp}` (`validation` 400, `not_found` 404, `method_not_allowed` 405, `database_unavailable`/`observability_unavailable` 503). Older Phase 3/4 endpoints keep their existing shapes. Only `GET` is accepted; unknown or repeated query parameters are rejected with 400.
+| Endpoint | Purpose / parameters |
+|---|---|
+| `GET /api/system/health[?deep=1]` | full component health, issues, attention list (works even when the database is down: status `critical`) |
+| `GET /api/system/metrics[?window=current\|5m\|1h\|24h\|7d\|startup][&since=&until=]` | tasks/agents/Supervisor/business operational metrics |
+| `GET /api/events` | newest first. `limit` 1–200 (50), `before=<event id>` cursor (`meta.nextBefore`), `kind` (event type or Supervisor decision name), `component`, `severity` or `minSeverity` (`debug,info,warning,error,critical`), `business`, `agent`, `task`, `correlation`, `since`/`until` (ISO, range ≤ 30 days) or `window` (`5m,1h,24h,7d`). Without `task/agent/correlation/before` the default window is the last 24 h |
+| `GET /api/events/:id` | the event plus its task and the task's chronological timeline (task states, Supervisor decisions, retries, result) |
+| `GET /api/errors` | events of severity ≥ error (`includeWarnings=true` adds warnings) with task/agent state, `retryable`, related Supervisor decisions and a plain-language `explanation`; same filters as events |
+| `GET /api/activity` | like events with `minSeverity=info` by default (debug hidden) plus `meta.counts` by severity |
+Responses are sanitized: credential-like keys redacted, file paths and stack traces removed, strings truncated; no endpoint exposes paths, secrets or SQL.

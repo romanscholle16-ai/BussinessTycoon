@@ -19,5 +19,8 @@ Chosen from ten Design Lab prototypes; no modifications requested. Implemented i
 ### Phase 4 addition
 The HQ (Supervisor tower) panel shows a LIVE SUPERVISOR block (state, cycle, in-flight, queue counts, limits, last decisions) from `/api/supervisor/*`, with a clear note when the API is unreachable; everything else is still mock data. The selected design is unchanged.
 
+### Phase 5 addition (observability in the Iso Command Hub)
+Design unchanged. New real-data surfaces: a **SYSTEM ● status pill** under the KPI bar (tap → HQ panel); the **HQ/Supervisor tower panel** shows live system health (component cards, issue count, attention items), live Supervisor status and recent decisions; the **LOG dock panel** is a real event timeline (severity badges, ALL/WARN+/ERRORS and component filters, SHOW STEPS toggle; idle cycles never appear); the **AGENTS panel** lists real agents (state, health, current task, success rate, heartbeat age). Polling every 5 s only while the tab is visible. KPIs, towers, business tabs, money, quests are still MOCK/DEMO and labelled so.
+
 ### Phase 1 client layout
 `client/public/` — `index.html`, `styles.css`, `manifest.webmanifest`, `sw.js` (app-shell cache; /api never cached), `icons/`, `js/{main,world,camera,ui,rules,util}.js`, `js/data/mock.js` (the only data source; replace in later phases). `lab/` holds the throwaway Design Lab prototypes, kept for reference.

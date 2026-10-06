@@ -4,6 +4,8 @@ import { readFile } from 'node:fs/promises';
 import { resolve, extname, sep } from 'node:path';
 import { ROOT } from '../config/index.js';
 import { handleAgentApi } from './agentRoutes.js';
+import { handleObservabilityApi } from './observabilityRoutes.js';
+import { PHASE } from '../version.js';
 
 const PUBLIC_DIR = resolve(ROOT, 'client/public');
 const MIME = {
@@ -30,12 +32,13 @@ export function createApp(config, services = {}) {
   return createServer(async (req, res) => {
     if (req.method === 'GET' && req.url === '/api/health') {
       res.writeHead(200, { 'content-type': 'application/json' });
-      // status = the HTTP server; database.status = storage (ok | unavailable | migration_required | migration_failed | not_configured)
+      // status = the HTTP server answering (always 'ok' here); health = real overall system health (never inferred from the HTTP response).
       const database = services.database ? services.database.health() : { status: 'not_configured' };
-      res.end(JSON.stringify({ status: 'ok', phase: 4, env: config.env, database }));
+      const sum = services.observability ? services.observability.summary() : { health: 'unknown', issues: 0, supervisor: { state: 'not_running', health: 'unknown' }, agentOS: { total: 0, available: 0, health: 'unknown' } };
+      res.end(JSON.stringify({ status: 'ok', health: sum.health, issues: sum.issues, phase: PHASE, env: config.env, database, supervisor: sum.supervisor, agentOS: sum.agentOS }));
       return;
     }
-    if (req.url.startsWith('/api/') && (await handleAgentApi(req, res, config, services))) return;
+    if (req.url.startsWith('/api/') && ((await handleObservabilityApi(req, res, services)) || (await handleAgentApi(req, res, config, services)))) return;
     if (req.method === 'GET' && !req.url.startsWith('/api/') && (await serveStatic(req, res))) return;
     res.writeHead(404, { 'content-type': 'application/json' });
     res.end(JSON.stringify({ error: 'not_found' }));

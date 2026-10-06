@@ -1,6 +1,6 @@
 # CHECKLIST
 
-`[ ]` not started · `[~]` active/in progress · `[x]` complete. Only the authorized phase may be worked on. Currently authorized: none. Next: PHASE 5 — Observability (awaiting user authorization). Update when a phase is verified and committed.
+`[ ]` not started · `[~]` active/in progress · `[x]` complete. Only the authorized phase may be worked on. Currently authorized: none. Next: PHASE 6 — AI Providers (awaiting user authorization). Update when a phase is verified and committed.
 
 - [x] **PHASE 0 — Foundation & Project Control** — COMPLETE
   - Acceptance: Docs complete; smoke test passes; committed.
@@ -12,7 +12,7 @@
   - Acceptance: Agents register, execute stub tasks, persist state; one OS shared by all businesses.
 - [x] **PHASE 4 — Supervisor** — COMPLETE
   - Acceptance: Supervisor schedules and recovers stub tasks; priority and budget rules enforced.
-- [ ] **PHASE 5 — Observability** — Not started
+- [x] **PHASE 5 — Observability** — COMPLETE
   - Acceptance: Every task emits events with IDs; timeline queryable via API.
 - [ ] **PHASE 6 — AI Providers** — Not started
   - Acceptance: Swap provider by config; failover tested with fakes; no hard-coded provider.

@@ -355,6 +355,6 @@ test('Supervisor API: status, decisions, demo controls, validation', async () =>
 
 test('security and scope: no network/code-exec in the Supervisor, schema unchanged, permissions not bypassed', () => {
   for (const f of readdirSync(join(ROOT, 'server/src/supervisor'))) { const src = readFileSync(join(ROOT, 'server/src/supervisor', f), 'utf8'); assert.ok(!/node:(http|https|net|dgram|child_process)|fetch\(|eval\(|new Function/.test(src), f); }
-  const s = setup(); try { assert.equal(migrationStatus(s.db).current, 3, 'Phase 4 added no migration'); assert.deepEqual(new Set(s.db.all("SELECT name FROM sqlite_master WHERE type='table'").map((r) => r.name)).has('supervisor_runs'), false); } finally { s.db.close(); rmSync(s.dir, { recursive: true, force: true }); }
+  const s = setup(); try { assert.equal(migrationStatus(s.db).applied.find((m) => m.name === 'agent_os').version, 3); assert.ok(!migrationStatus(s.db).applied.some((m) => /supervisor/.test(m.name)), 'Phase 4 added no migration'); assert.deepEqual(new Set(s.db.all("SELECT name FROM sqlite_master WHERE type='table'").map((r) => r.name)).has('supervisor_runs'), false); } finally { s.db.close(); rmSync(s.dir, { recursive: true, force: true }); }
   assert.ok(!JSON.stringify(normalizeSupervisorConfig({})).match(/key|token|secret|password/i));
 });

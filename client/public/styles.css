@@ -25,3 +25,12 @@ h2{margin:8px 0 6px;font-size:13px;letter-spacing:1px}h2:first-child{margin-top:
 .dock{position:absolute;left:4px;right:4px;bottom:calc(4px + env(safe-area-inset-bottom));display:flex;gap:4px;z-index:6}
 .dock button{flex:1;min-height:50px;background:var(--p);color:var(--mu);border:1px solid #00f0ff44;font-size:10px;letter-spacing:.3px;padding:0 2px}.dock button.on{color:var(--c);border-color:var(--c)}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+.warn{color:var(--a)!important}.unk{color:var(--mu)!important}
+.pill{background:none;border:1px solid currentColor;padding:4px 10px;min-height:32px;font-weight:bold;letter-spacing:.5px;margin-bottom:4px}
+.hgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin:6px 0}.hc{border:1px solid currentColor;padding:6px;font-size:11px;color:var(--ok)}.hc.warn{color:var(--a)}.hc.no{color:var(--no)}.hc.unk{color:var(--mu)}.hc b{display:block;color:var(--t)}.hc span{text-transform:uppercase;font-weight:bold}.hc small{display:block;color:var(--mu);margin-top:2px}
+.chips{display:flex;gap:4px;margin:6px 0;flex-wrap:wrap}.chipb{background:none;border:1px solid #00f0ff44;color:var(--mu);min-height:36px;padding:0 10px;font-size:11px}.chipb.on{background:var(--c);color:#001}
+.ev small{display:block;color:var(--mu)}.sevb{font-size:10px;padding:0 4px;border:1px solid currentColor}
+.ev.sev-warning .sevb,.ev.sev-warn .sevb{color:var(--a)}.ev.sev-error .sevb{color:var(--no)}.ev.sev-critical .sevb{color:#fff;background:var(--no)}.ev.sev-info .sevb{color:var(--mu)}.ev.sev-debug{opacity:.6}
+.ev.sev-warning,.ev.sev-warn{border-left:3px solid var(--a);padding-left:6px}.ev.sev-error,.ev.sev-critical{border-left:3px solid var(--no);padding-left:6px}
+.hbadge{font-size:10px;text-transform:uppercase;border:1px solid currentColor;padding:0 4px}

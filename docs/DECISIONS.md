@@ -31,3 +31,9 @@
 | D-028 | Scheduling order: aged priority → deadline → business load → age → id; agent: specialist → least recently active → id; aging gives starvation protection | Deterministic, testable, fair | accepted |
 | D-029 | Infrastructure recovery (lease/orphan/stale agent) releases tasks without consuming retries; timeouts of live executors do; terminal failures are never retried; agents get ≤3 automatic restarts per 10 min then are escalated as failed | Matches Phase 3 retry semantics, avoids restart loops | accepted |
 | D-030 | Decisions are edge-triggered/deduplicated (persisted keys); idle cycles write nothing | Avoid event spam | accepted |
+| D-031 | Observability is read-only (Observe→Persist→Query→Explain→Display); recovery stays with the Supervisor | Scope lock, safety | locked |
+| D-032 | No schema change except indexes (0004); correlation/retry/parent derived by joining `tasks`; stored severity `warn` is exposed as `warning` | Events table is append-only and already sufficient | accepted |
+| D-033 | Overall health is `healthy` only if database, Supervisor and Agent OS are all healthy; missing information is `unknown`, never `healthy` | HTTP 200 must not imply healthy | accepted |
+| D-034 | No log files: durable history is the events table; process logs are structured JSON on stdout; events are not mirrored to logs | No duplicates, nothing to rotate | accepted |
+| D-035 | New observability endpoints use `{ok,timestamp,data,meta}`; Phase 3/4 endpoints keep their shapes | Do not break consumers | accepted |
+| D-036 | Metrics windows use indexed columns; `until` is inclusive for metrics; list queries default to a 24 h window and cap at 30 days / 200 rows | Bounded cost on long-lived databases | accepted |

@@ -29,3 +29,9 @@
 - Supervisor health surfaced in /api/health (Phase 5)
 - Run handlers in worker threads so stuck handlers can be killed (Phase 19)
 - Adaptive polling interval / event-driven wakeups instead of fixed polling
+- Event retention/archival and pruning policy (Phase 24); optional on-disk rotating log if a service wrapper needs it (Phase 22)
+- Server-sent events for the timeline instead of polling
+- Typed error taxonomy (code, class, retryable) stored on events
+- Per-business drill-down screens and charts (when real business data exists)
+- Alert thresholds configurable from the UI (Phase 20)
+- Health history (store periodic snapshots to show trends)

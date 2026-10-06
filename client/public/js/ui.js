@@ -21,7 +21,7 @@ function upgradeCard(D, S, u) {
 }
 
 export function bizPanel(D, S, id) {
-  if (id === 'hq') return `<button class="x" data-x aria-label="Close">✕</button>${supervisorLive(S.live)}<h2 style="color:var(--c)">SUPERVISOR (MOCK DATA)</h2><div class="row3"><div>STATE<b style="font-size:10px">${esc(D.supervisor.state)}</b></div><div>LOAD<b>${pct(D.supervisor.load)}</b></div><div>EMPIRE LV<b>${D.empire.level}</b></div></div>${D.supervisor.decisions.map((d) => `<div class="note o">${esc(d)}</div>`).join('')}<h2>SYSTEM HEALTH</h2><div class="note">${Object.entries(D.health).map(([k, v]) => esc(k) + ': ' + esc(v)).join(' · ')}</div>`;
+  if (id === 'hq') return `<button class="x" data-x aria-label="Close">✕</button>${healthBlock(S.live?.health)}${supervisorLive(S.live)}<h2 style="color:var(--c)">SUPERVISOR (MOCK DATA)</h2><div class="row3"><div>STATE<b style="font-size:10px">${esc(D.supervisor.state)}</b></div><div>LOAD<b>${pct(D.supervisor.load)}</b></div><div>EMPIRE LV<b>${D.empire.level}</b></div></div>${D.supervisor.decisions.map((d) => `<div class="note o">${esc(d)}</div>`).join('')}<h2>SYSTEM HEALTH (MOCK DATA)</h2><div class="note">${Object.entries(D.health).map(([k, v]) => esc(k) + ': ' + esc(v)).join(' · ')}</div>`;
   const b = bizById(D, id), t = S.tab;
   const body = t === 'why' ? `<div class="note">WHY: ${esc(b.why)}</div><div class="note o">FOUND: ${esc(b.opp)}</div>${b.attention ? `<div class="note no-b">NEEDS YOU: ${esc(b.attention)}</div>` : ''}<div class="note">${esc(b.headline)} · queue ${b.queue} · health ${b.health}%</div>`
     : t === 'cost' ? costBars(b) : t === 'agents' ? D.agents.filter((a) => a.biz === id).map(agentRow).join('') || '<div class="note">Uses shared agents.</div>'
@@ -31,17 +31,53 @@ export function bizPanel(D, S, id) {
 
 export function modePanel(D, S, mode) {
   if (mode === 'biz') return `<h2>BUSINESSES BY ROI</h2>${[...D.biz].sort((a, b) => b.roi - a.roi).map((b) => `<div class="note ${b.profit >= 0 ? 'o' : ''}" data-pick="${b.id}"><b style="color:${b.color}">${esc(b.name)}</b> ${signed(b.profit)} · ROI ${pct(b.roi)}<br>${esc(b.headline)}</div>`).join('')}<h2>OPPORTUNITIES</h2>${D.biz.map((b) => `<div class="note o"><b style="color:${b.color}">${esc(b.short)}</b> ${esc(b.opp)}</div>`).join('')}`;
-  if (mode === 'agents') return `<h2>SUPERVISOR</h2><div class="note o"><b>${esc(D.supervisor.state)}</b> · load ${pct(D.supervisor.load)}</div><h2>AGENTS · ${D.agents.length}</h2>${D.agents.map(agentRow).join('')}`;
+  if (mode === 'agents') return `${S.live?.status ? '' : '<div class="note">Supervisor: no live connection (mock)</div>'}<h2>AGENTS${S.live?.agents ? ' · LIVE · ' + S.live.agents.length : ' · MOCK'}</h2>${agentsLive(D, S)}`;
   if (mode === 'money') return `<h2>FINANCE · 7 DAYS</h2><div class="row3"><div>REVENUE<b>${money(D.rev)}</b></div><div>COST<b>${money(D.cost)}</b></div><div>NET<b class="${cls(D.net)}">${signed(D.net)}</b></div></div>${D.biz.map((b) => `<div class="note ${b.profit >= 0 ? 'o' : ''}"><b style="color:${b.color}">${esc(b.name)}</b> <span class="${cls(b.profit)}">${signed(b.profit)}</span>${costBars(b)}</div>`).join('')}<h2>UPGRADES</h2>${D.upgrades.map((u) => upgradeCard(D, S, u)).join('')}`;
   if (mode === 'todo') return `<h2>NEEDS YOU</h2>${D.approvalsPending.filter((q) => !S.done.has(q.id)).map((q) => `<div class="note">${esc(q.text)}<br><small>${q.cost > D.rules.rulesMaxUsd ? 'over $' + D.rules.rulesMaxUsd + ': human approval' : 'confirm'}</small><br><button class="go" data-ok="${q.id}">APPROVE</button> <button class="go ghost" data-ok="${q.id}">DENY</button></div>`).join('') || '<div class="note o">ALL CLEAR</div>'}<h2>QUESTS</h2>${D.quests.map(questRow).join('')}`;
-  if (mode === 'log') return `<h2>EVENT TIMELINE</h2>${D.events.map(eventRow).join('')}`;
+  if (mode === 'log') return timelinePanel(D, S);
   return '';
 }
 
-/** Live Supervisor block (real server data). Shown above the mock Supervisor info; absent when the API is unreachable. */
+const STEP_KINDS = new Set(['task.pending', 'task.queued', 'task.assigned', 'task.running', 'agent.created', 'agent.ready', 'agent.running']);
+const SEV_LABEL = { debug: 'DBG', info: 'INFO', warning: 'WARN', error: 'ERR', critical: 'CRIT' };
+const STATUS_CLASS = { healthy: 'ok', degraded: 'warn', critical: 'no', unknown: 'unk' };
+const hhmmss = (iso) => (iso ? esc(iso.slice(11, 19)) : '--:--:--');
+const ago = (iso, now = Date.now()) => { if (!iso) return 'never'; const s = Math.max(0, Math.round((now - Date.parse(iso)) / 1000)); return s < 60 ? `${s}s ago` : s < 3600 ? `${Math.round(s / 60)}m ago` : `${Math.round(s / 3600)}h ago`; };
+export const healthLabel = (h) => (h ? h.status.toUpperCase() : 'NO LIVE DATA');
+
+/** Small status pill under the KPI bar. */
+export function healthPill(live) {
+  const st = live?.health?.status ?? 'unknown';
+  return `<button class="pill ${STATUS_CLASS[st]}" data-open="hq" aria-label="System health: ${esc(healthLabel(live?.health))}">SYSTEM ● ${esc(healthLabel(live?.health))}</button>`;
+}
+/** Real system health: overall status, component cards, issues, attention items. */
+export function healthBlock(h) {
+  if (!h) return '<div class="note">SYSTEM HEALTH: no live connection (the server API is unreachable).</div>';
+  const cards = Object.entries(h.components).map(([k, c]) => `<div class="hc ${STATUS_CLASS[c.status]}"><b>${esc(k)}</b><span>${esc(c.status)}</span><small>${esc(c.reasons[0] ?? (c.status === 'unknown' ? 'not available' : 'ok'))}</small></div>`).join('');
+  const att = (h.attention ?? []).map((a) => `<div class="note ${a.severity === 'error' ? 'no-b' : ''}">${esc(a.message)}</div>`).join('');
+  return `<div class="note ${h.status === 'healthy' ? 'o' : h.status === 'critical' ? 'no-b' : ''}"><b>SYSTEM HEALTH · ${esc(h.status.toUpperCase())}</b><br>${esc(h.summary)}<br><small>${h.issues} issue(s) · checked ${esc(ago(h.checkedAt))}</small></div><div class="hgrid">${cards}</div>${att}`;
+}
+/** Live Supervisor block: state, queue, recovery counts, and recent decisions. */
 export function supervisorLive(live) {
-  if (!live) return '<div class="note">SUPERVISOR: no live connection — showing mock data below.</div>';
+  if (!live?.status) return '<div class="note">SUPERVISOR: no live connection — showing mock data below.</div>';
   const sv = live.status, q = sv.lastCycle?.queue ?? {}, st = sv.state;
-  return `<div class="note ${st === 'running' ? 'o' : 'no-b'}"><b>LIVE SUPERVISOR · ${esc(st.toUpperCase())}</b><br>cycle ${sv.cycle} · in flight ${sv.inFlight} · dispatched ${sv.counters.dispatched} · recoveries ${sv.counters.recoveries}<br>queue: ${q.queued ?? 0} queued · ${q.running ?? 0} running · ${q.retrying ?? 0} retrying · ${q.blocked ?? 0} blocked${sv.activeLimits.length ? `<br>⚠ limit reached: ${sv.activeLimits.map(esc).join(', ')}` : ''}</div>
-  <h2>RECENT DECISIONS</h2>${(live.decisions ?? []).slice(0, 5).map((d) => `<div class="ev"><time>${esc(d.ts.slice(11, 19))}</time><span>${esc(d.kind)} · ${esc(d.result)}</span></div>`).join('') || '<div class="note">none yet</div>'}`;
+  return `<div class="note ${st === 'running' ? 'o' : 'no-b'}"><b>LIVE SUPERVISOR · ${esc(st.toUpperCase())}</b><br>cycle ${sv.cycle} · in flight ${sv.inFlight} · dispatched ${sv.counters.dispatched} · recoveries ${sv.counters.recoveries}<br>queue: ${q.queued ?? 0} queued · ${q.running ?? 0} running · ${q.retrying ?? 0} retrying · ${q.blocked ?? 0} blocked<br>last cycle ${esc(ago(sv.lastOkCycleAt))}${sv.activeLimits.length ? `<br>⚠ limit reached: ${sv.activeLimits.map(esc).join(', ')}` : ''}</div>
+  <h2>RECENT DECISIONS</h2>${(live.decisions ?? []).slice(0, 5).map((d) => `<div class="ev sev-${esc(d.severity === 'warn' ? 'warning' : d.severity)}"><time>${hhmmss(d.ts)}</time><span>${esc(d.kind)} · ${esc(d.result)}</span></div>`).join('') || '<div class="note">no decisions yet</div>'}`;
+}
+/** Event timeline: real events with severity/component filters. Falls back to clearly labelled mock events when offline. */
+export function timelinePanel(D, S) {
+  const f = S.logFilter ?? { sev: 'info', comp: '' }, live = S.live?.events;
+  const chip = (attr, val, label, on) => `<button class="chipb ${on ? 'on' : ''}" ${attr}="${val}">${label}</button>`;
+  const filters = `<div class="chips">${[['info', 'ALL'], ['warning', 'WARN+'], ['error', 'ERRORS']].map(([v, l]) => chip('data-lf-sev', v, l, f.sev === v)).join('')}</div><div class="chips">${[['', 'ANY'], ['task', 'TASKS'], ['agent', 'AGENTS'], ['supervisor', 'SUPERVISOR']].map(([v, l]) => chip('data-lf-comp', v, l, f.comp === v)).join('')}${chip('data-lf-steps', f.steps ? '0' : '1', f.steps ? 'HIDE STEPS' : 'SHOW STEPS', false)}</div>`;
+  if (!live) return `<h2>EVENT TIMELINE</h2><div class="note">No live connection — showing MOCK events.</div>${D.events.map(eventRow).join('')}`;
+  const shown = f.steps ? live.events : live.events.filter((e) => !STEP_KINDS.has(e.kind) || e.severity !== 'info');
+  const rows = shown.map((e) => `<div class="ev sev-${e.severity}"><time>${hhmmss(e.ts)}</time><span><b class="sevb">${SEV_LABEL[e.severity]}</b> ${e.kind.startsWith('supervisor.') ? `<b>${esc(e.name)}</b> · ` : ''}${esc(e.message)}<small>${esc(e.component)}${e.agentId ? ' · ' + esc(e.agentId) : ''}${e.taskId ? ' · task ' + esc(e.taskId.slice(0, 8)) : ''}${e.error?.code ? ' · ' + esc(e.error.code) : ''}${e.retry && e.retry.count ? ` · retry ${e.retry.count}/${e.retry.max}` : ''}${e.dataMode !== 'live' ? ' · ' + esc(e.dataMode.toUpperCase()) : ''}</small></span></div>`).join('');
+  return `<h2>EVENT TIMELINE · LIVE</h2>${filters}${rows || '<div class="note">Nothing to show. Quiet is normal: idle Supervisor cycles are not logged, and routine task steps are hidden (SHOW STEPS).</div>'}`;
+}
+/** Real agent roster (status, health, current task, success rate, heartbeat age). */
+export function agentsLive(D, S) {
+  const live = S.live?.agents;
+  if (!live) return `<div class="note">No live connection — showing MOCK agents.</div>${D.agents.map(agentRow).join('')}`;
+  if (!live.length) return '<div class="note">No agents are registered yet.</div>';
+  return live.map((a) => `<div class="agent st-${esc(a.status)}"><b class="name">${esc(a.name)}</b> <span class="hbadge ${STATUS_CLASS[a.healthStatus === 'stalled' || a.healthStatus === 'failed' ? (a.healthStatus === 'failed' ? 'critical' : 'degraded') : a.healthStatus === 'degraded' ? 'degraded' : a.healthStatus === 'healthy' ? 'healthy' : 'unknown']}">${esc(a.healthStatus)}</span><span class="meta">${esc(a.role)} · ${esc(a.status)} · L${a.level} · ${a.metrics.successRate == null ? 'no results yet' : Math.round(a.metrics.successRate * 100) + '% ok'} · beat ${esc(ago(a.lastHeartbeatAt))}</span><span class="task">${a.currentTaskId ? 'working: ' + esc(a.currentTaskId.slice(0, 8)) : 'idle'}${a.dataMode !== 'live' ? ' · ' + esc(a.dataMode.toUpperCase()) : ''}</span></div>`).join('');
 }
