@@ -7,7 +7,7 @@ Status vocabulary: `not started`, `in progress`, `completed`, `blocked`, `deferr
 ## PHASE 0 — Foundation & Project Control
 - Scope: Repo structure, docs, state tracking, config, smoke test, Git.
 - Acceptance: Docs complete; smoke test passes; committed.
-- Status: in progress → completed at commit
+- Status: completed
 
 ## PHASE 1 — Game Client
 - Scope: Responsive PWA: 32-bit futuristic bird's-eye map, pan/zoom/touch, HQ + 4 business buildings (mock data).

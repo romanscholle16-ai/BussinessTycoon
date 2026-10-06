@@ -1,8 +1,8 @@
 # CHECKLIST
 
-`[ ]` not started · `[~]` active/in progress · `[x]` complete. Only the active phase may be worked on. Update when a phase is verified and committed.
+`[ ]` not started · `[~]` active/in progress · `[x]` complete. Only the authorized phase may be worked on. Currently authorized: none (Phase 1 is next, awaiting user authorization). Update when a phase is verified and committed.
 
-- [~] **PHASE 0 — Foundation & Project Control** — ACTIVE
+- [x] **PHASE 0 — Foundation & Project Control** — COMPLETE
   - Acceptance: Docs complete; smoke test passes; committed.
 - [ ] **PHASE 1 — Game Client** — Not started
   - Acceptance: Runs on Android browser; pan/zoom smooth; installable PWA; no real backend data required.

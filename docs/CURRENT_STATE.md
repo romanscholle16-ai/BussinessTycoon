@@ -5,8 +5,9 @@ Autonomous Tycoon — Windows-hosted autonomous-business platform with a 32-bit 
 
 ## Phase status
 - Current phase: **PHASE 0 — Foundation & Project Control**
-- Completed phases: none formally; Phase 0 implemented and validated, awaiting the user's go-ahead.
-- Phase 0 status: **complete** (committed on branch `claude/autonomous-tycoon-phase-0-fur6cl`)
+- Completed phases: PHASE 0 (reviewed and accepted by the user)
+- Phase 0 status: **COMPLETE** (branch `claude/autonomous-tycoon-phase-0-fur6cl`)
+- Phase 1 implementation: **not started**
 - Next authorized phase: **PHASE 1 — Game Client** (NOT started; requires explicit user authorization)
 
 ## Architecture status

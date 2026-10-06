@@ -1,14 +1,16 @@
 {
   "project": "Autonomous Tycoon",
   "currentPhase": 0,
-  "phaseStatus": "complete_pending_review",
-  "completedPhases": [],
+  "phaseStatus": "complete",
+  "completedPhases": [
+    0
+  ],
   "nextAuthorizedPhase": 1,
   "phases": [
     {
       "id": 0,
       "name": "Foundation & Project Control",
-      "status": "in_progress"
+      "status": "complete"
     },
     {
       "id": 1,
