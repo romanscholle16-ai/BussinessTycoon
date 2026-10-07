@@ -34,3 +34,4 @@ h2{margin:8px 0 6px;font-size:13px;letter-spacing:1px}h2:first-child{margin-top:
 .ev.sev-warning .sevb,.ev.sev-warn .sevb{color:var(--a)}.ev.sev-error .sevb{color:var(--no)}.ev.sev-critical .sevb{color:#fff;background:var(--no)}.ev.sev-info .sevb{color:var(--mu)}.ev.sev-debug{opacity:.6}
 .ev.sev-warning,.ev.sev-warn{border-left:3px solid var(--a);padding-left:6px}.ev.sev-error,.ev.sev-critical{border-left:3px solid var(--no);padding-left:6px}
 .hbadge{font-size:10px;text-transform:uppercase;border:1px solid currentColor;padding:0 4px}
+.rs-run{padding:6px 0;border-top:1px solid #00f0ff22}.rs-run .meta{display:block;color:var(--mu);font-style:normal;word-break:break-word}.rs-run.w{border-left:3px solid var(--a);padding-left:6px}.rs-run.o{border-left:3px solid var(--ok);padding-left:6px}

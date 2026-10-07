@@ -65,7 +65,7 @@ test('agent registration validates definitions and keeps secrets and external po
     assert.throws(() => s.os.registry.register({ ...base, permissions: { capabilities: ['teleport'] } }), /Unknown capability/);
     assert.throws(() => s.os.registry.register({ ...base, limits: { maxConcurrentTasks: 5 } }), ValidationError);
     assert.throws(() => s.os.registry.register({ ...base, businessId: 'etsy', permissions: { capabilities: ['research'], businesses: ['*'] } }), /shared agents/);
-    assert.ok(Object.entries(CAPABILITIES).filter(([k, c]) => c.external && k !== 'ai').every(([, c]) => !c.enabled), 'every external capability except the AI service is disabled'); assert.equal(CAPABILITIES.ai.enabled, true);
+    assert.ok(Object.entries(CAPABILITIES).filter(([k, c]) => c.external && k !== 'ai' && k !== 'source_retrieval').every(([, c]) => !c.enabled), 'every external capability except the AI service is disabled'); assert.equal(CAPABILITIES.ai.enabled, true); assert.equal(CAPABILITIES.source_retrieval.enabled, true);
     const ok = s.os.registry.register({ ...base, name: 'Good', businessId: 'etsy' }, { dataMode: 'test' });
     assert.deepEqual(ok.permissions, { capabilities: ['research'], businesses: ['etsy'] });
     assert.equal(ok.config.limits.timeoutMs, 30000);

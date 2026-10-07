@@ -36,3 +36,10 @@
 - `server/src/ai/`: provider-neutral AI service with Claude, OpenAI-compatible and Ollama adapters, deterministic mock, Freebuff boundary; deterministic selection, bounded retry/failover, circuit breaker, rate-limit handling, timeouts/cancellation, cost estimation/accounting with fail-closed ceilings, redaction, observability events, `ai.complete` Agent OS handler (capability `ai`).
 - `GET /api/ai/providers`; HQ panel shows AI status; `.env` loader and AI_* settings; token-count keys no longer mistaken for credentials; observability exposes AI cost.
 - No migration, no new dependencies. Tests: tests/ai.test.js (14 tests).
+
+## Phase 7 — Research Engine
+- `server/src/research/`: business-independent research pipeline (objective → plan → discover → retrieve → evaluate → evidence → analyze → synthesize → validate → explain) with a persisted, resumable run lifecycle; migration `0005_research` (6 tables); `/api/research/*` endpoints (no arbitrary-URL fetch); `research.run` Agent OS task + `research-engine` agent; capabilities `source_discovery`, `source_retrieval`, `evidence_analysis`.
+- Safe retriever: HTTPS/public-address policy, DNS checks before and at connect, per-hop redirect validation, size/time/redirect limits, robots.txt, text-only HTML extraction. Deterministic mock discovery/retrieval providers; generic JSON search adapter.
+- Explainable source quality, evidence with traceability, explicit conflicts, deduplication, bounded confidence, generic findings, optional bounded AI inference via the Phase 6 service (validated, low-confidence, never sourced fact).
+- UI: minimal real Research panel (dock) with labelled empty state. Observability: `research.*` events.
+- No new dependencies. Tests: tests/research.test.js (23 tests). Version 0.7.0.

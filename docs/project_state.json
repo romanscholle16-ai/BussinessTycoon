@@ -1,6 +1,6 @@
 {
   "project": "Autonomous Tycoon",
-  "currentPhase": 6,
+  "currentPhase": 7,
   "phaseStatus": "complete",
   "completedPhases": [
     0,
@@ -9,9 +9,10 @@
     3,
     4,
     5,
-    6
+    6,
+    7
   ],
-  "nextAuthorizedPhase": 7,
+  "nextAuthorizedPhase": 8,
   "phases": [
     {
       "id": 0,
@@ -51,7 +52,7 @@
     {
       "id": 7,
       "name": "Research Engine",
-      "status": "not_started"
+      "status": "complete"
     },
     {
       "id": 8,
@@ -146,7 +147,7 @@
   ],
   "lastValidation": {
     "command": "npm test",
-    "result": "pass (88 tests)"
+    "result": "pass (111 tests)"
   },
   "lastCommit": "see git log",
   "blocked": [],
@@ -186,5 +187,32 @@
       "freebuff(boundary)"
     ],
     "dependencies": 0
+  },
+  "research": {
+    "phase": 7,
+    "status": "complete",
+    "migration": "0005_research",
+    "modules": "server/src/research/",
+    "task": "research.run",
+    "agent": "research-engine",
+    "capabilities": [
+      "source_discovery",
+      "source_retrieval",
+      "evidence_analysis"
+    ],
+    "api": "/api/research/*",
+    "liveSearchProviderTested": false,
+    "liveRetrievalSmokeTest": "https://example.com/ ok",
+    "knownIssues": [
+      "KI-038",
+      "KI-039",
+      "KI-040",
+      "KI-041",
+      "KI-042",
+      "KI-043",
+      "KI-044",
+      "KI-045",
+      "KI-046"
+    ]
   }
 }

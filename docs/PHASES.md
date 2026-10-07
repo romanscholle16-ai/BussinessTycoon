@@ -42,7 +42,7 @@ Status vocabulary: `not started`, `in progress`, `completed`, `blocked`, `deferr
 ## PHASE 7 — Research Engine
 - Scope: Shared research: demand, competition, trends, gaps.
 - Acceptance: Produces structured opportunity reports from sandboxed sources.
-- Status: not started
+- Status: COMPLETE (business-independent engine; see ARCHITECTURE.md "Research Engine"; no live search provider tested — KI-038)
 
 ## PHASE 8 — Etsy
 - Scope: Etsy/POD business engine: research→design→IP check→POD select→listing→monitor.

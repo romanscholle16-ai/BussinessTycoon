@@ -2,7 +2,7 @@ import { DEMO } from './data/mock.js';
 import { $, $$ } from './util.js';
 import { Camera } from './camera.js';
 import { GRID, iso, hitTest, drawWorld } from './world.js';
-import { kpiBar, bizPanel, modePanel, healthPill } from './ui.js';
+import { kpiBar, bizPanel, modePanel, healthPill, researchPanel } from './ui.js';
 import { evaluateSpend } from './rules.js';
 
 // Data source seam: Phase 2+ replaces this with the real API; the UI only sees a snapshot object.
@@ -28,7 +28,7 @@ function setDock(m) { $$('#dock button').forEach((b) => { const on = b.dataset.m
 
 document.addEventListener('click', (e) => {
   const t = e.target, d = t.dataset;
-  if (d.m) { S.mode = d.m; if (d.m !== 'city') S.sel = null; setDock(d.m); render(); if (d.m === 'log' || d.m === 'agents') pollLive(); }
+  if (d.m) { S.mode = d.m; if (d.m !== 'city') S.sel = null; setDock(d.m); render(); if (['log', 'agents', 'research'].includes(d.m)) pollLive(); }
   if (d.open === 'hq') { S.sel = 'hq'; S.mode = 'city'; setDock('city'); render(); }
   if (d.lfSev !== undefined) { S.logFilter.sev = d.lfSev; render(); pollLive(); }
   if (d.lfSteps !== undefined) { S.logFilter.steps = d.lfSteps === '1'; render(); }
@@ -55,10 +55,11 @@ async function pollLive() {
     const [h, a, b, ai] = await Promise.all([getJson('/api/system/health'), getJson('/api/supervisor/status').catch(() => null), getJson('/api/supervisor/decisions?limit=5').catch(() => null), getJson('/api/ai/providers').catch(() => null)]);
     S.live = { ...(S.live ?? {}), health: h.data, status: a?.supervisor ?? null, decisions: b?.decisions ?? [], ai: ai?.data ?? null };
     if (S.mode === 'log') { const f = S.logFilter, q = new URLSearchParams({ limit: '80', minSeverity: f.sev }); if (f.comp) q.set('component', f.comp); S.live.events = { events: (await getJson('/api/activity?' + q)).data.events }; }
+    if (S.mode === 'research') { const [runs, st] = await Promise.all([getJson('/api/research/runs?limit=10'), getJson('/api/research/status').catch(() => null)]); S.live.research = { runs: runs.data, providers: st?.data ?? null }; }
     if (S.mode === 'agents') S.live.agents = (await getJson('/api/agents')).agents;
   } catch { S.live = null; }
   $('#health-pill').innerHTML = healthPill(S.live);
-  if (S.sel === 'hq' || ['log', 'agents'].includes(S.mode)) render();
+  if (S.sel === 'hq' || ['log', 'agents', 'research'].includes(S.mode)) render();
 }
 pollLive(); setInterval(pollLive, 5000); document.addEventListener('visibilitychange', () => { if (!document.hidden) pollLive(); });
 function frame(t) { drawWorld(ctx, cam, t, { biz: D.biz, selected: S.sel, layers: S.layers, levels: S.levels }); requestAnimationFrame(frame); }

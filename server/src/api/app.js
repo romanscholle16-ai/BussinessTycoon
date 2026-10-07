@@ -6,6 +6,7 @@ import { ROOT } from '../config/index.js';
 import { handleAgentApi } from './agentRoutes.js';
 import { handleObservabilityApi } from './observabilityRoutes.js';
 import { handleAiApi } from './aiRoutes.js';
+import { handleResearchApi } from './researchRoutes.js';
 import { PHASE } from '../version.js';
 
 const PUBLIC_DIR = resolve(ROOT, 'client/public');
@@ -39,7 +40,7 @@ export function createApp(config, services = {}) {
       res.end(JSON.stringify({ status: 'ok', health: sum.health, issues: sum.issues, phase: PHASE, env: config.env, database, supervisor: sum.supervisor, agentOS: sum.agentOS }));
       return;
     }
-    if (req.url.startsWith('/api/') && ((await handleObservabilityApi(req, res, services)) || (await handleAiApi(req, res, services)) || (await handleAgentApi(req, res, config, services)))) return;
+    if (req.url.startsWith('/api/') && ((await handleObservabilityApi(req, res, services)) || (await handleAiApi(req, res, services)) || (await handleResearchApi(req, res, services)) || (await handleAgentApi(req, res, config, services)))) return;
     if (req.method === 'GET' && !req.url.startsWith('/api/') && (await serveStatic(req, res))) return;
     res.writeHead(404, { 'content-type': 'application/json' });
     res.end(JSON.stringify({ error: 'not_found' }));

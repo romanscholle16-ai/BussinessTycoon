@@ -244,9 +244,9 @@ test('Observability API: envelope, filters, validation, read-only, no leaks, deg
   const obs = f.obs(), app = await serve(f.cfg, { database: f.svc, agentOS: f.os, supervisor: f.sup, observability: obs });
   try {
     await f.sup.start({ loop: false }); f.submit('demo.fail', { businessId: 'etsy' }); f.submit('demo.noop'); await f.sup.cycle({ wait: true }); await f.sup.cycle({ wait: true });
-    let r = await get(app.base, '/api/system/health'); assert.equal(r.code, 200); assert.equal(r.body.ok, true); assert.ok(r.body.timestamp); assert.equal(r.body.meta.phase, 6); assert.ok(['healthy', 'degraded', 'critical', 'unknown'].includes(r.body.data.status)); assert.ok(r.body.data.components.database);
+    let r = await get(app.base, '/api/system/health'); assert.equal(r.code, 200); assert.equal(r.body.ok, true); assert.ok(r.body.timestamp); assert.equal(r.body.meta.phase, 7); assert.ok(['healthy', 'degraded', 'critical', 'unknown'].includes(r.body.data.status)); assert.ok(r.body.data.components.database);
     r = await get(app.base, '/api/system/health?deep=1'); assert.equal(r.body.data.components.database.details.integrity, 'ok');
-    r = await get(app.base, '/api/health'); assert.equal(r.body.status, 'ok'); assert.ok('health' in r.body && 'supervisor' in r.body && 'agentOS' in r.body && r.body.database.schemaVersion >= 4 && r.body.phase === 6); assert.ok(JSON.stringify(r.body).length < 800, 'health stays small');
+    r = await get(app.base, '/api/health'); assert.equal(r.body.status, 'ok'); assert.ok('health' in r.body && 'supervisor' in r.body && 'agentOS' in r.body && r.body.database.schemaVersion >= 4 && r.body.phase === 7); assert.ok(JSON.stringify(r.body).length < 800, 'health stays small');
     r = await get(app.base, '/api/system/metrics?window=1h'); assert.equal(r.code, 200); assert.equal(r.body.meta.window, '1h'); assert.ok(r.body.data.tasks.window.failed >= 1); r = await get(app.base, '/api/system/metrics?window=current'); assert.equal(r.body.data.tasks.window, null);
     r = await get(app.base, '/api/events?limit=5'); assert.equal(r.code, 200); assert.ok(r.body.data.events.length <= 5 && r.body.meta.limit === 5); assert.ok(r.body.data.events.every((e) => SEVERITIES.includes(e.severity)));
     r = await get(app.base, '/api/events?minSeverity=error&component=task'); assert.ok(r.body.data.events.length >= 1 && r.body.data.events.every((e) => e.component === 'task' && ['error', 'critical'].includes(e.severity)));
@@ -286,7 +286,7 @@ test('migration 0004 upgrades a populated Phase 4 database and the new indexes e
     const ms = loadMigrations(), db = Db.open(file); migrate(db, ms.slice(0, 3)); const repos = createRepos(db); seedFoundation(repos); seedDemo(db, repos);
     repos.tasks.insert({ id: 'tk', type: 'demo.noop', status: 'completed', completed_at: '2030-01-01T00:00:00.000Z', started_at: '2029-12-31T23:59:59.000Z', data_mode: 'test' }); repos.events.insert({ type: 'task.completed', severity: 'warning', task_id: 'tk', action: 'a', data_mode: 'test' });
     const before = db.get('SELECT COUNT(*) AS n FROM events').n; assert.equal(db.get("SELECT COUNT(*) AS n FROM sqlite_master WHERE name = 'idx_events_task'").n, 0);
-    assert.deepEqual(migrate(db, ms).ran, [4]); assert.equal(db.get('SELECT COUNT(*) AS n FROM events').n, before, 'no event was touched');
+    assert.deepEqual(migrate(db, ms).ran, [4, 5]); assert.equal(db.get('SELECT COUNT(*) AS n FROM events').n, before, 'no event was touched');
     for (const ix of ['idx_events_task', 'idx_events_agent', 'idx_events_severity', 'idx_tasks_completed']) assert.equal(db.get('SELECT COUNT(*) AS n FROM sqlite_master WHERE name = ?', [ix]).n, 1, ix);
     assert.ok(db.integrityCheck().ok && db.foreignKeyCheck().ok); assert.equal(db.pragma('foreign_keys'), 1);
     assert.equal(new EventQueries(db).list({ limit: 5, since: '2000-01-01T00:00:00.000Z', task: 'tk', severity: 'warning' }).events.length, 1);

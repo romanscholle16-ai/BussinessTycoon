@@ -68,6 +68,13 @@ export function createRepos(db) {
   const leaderboard = makeRepo(db, { table: 'leaderboard_metrics', cols: ['subject_type', 'subject_id', 'metric', 'value', 'period', 'recorded_at', ...base], generateId: false, readOnly: true });
   const metrics = makeRepo(db, { table: 'business_metrics', cols: ['business_id', 'metric', 'value', 'period', 'recorded_at', ...base], generateId: false, readOnly: true });
 
+  const researchRuns = makeRepo(db, { table: 'research_runs', cols: ['status', 'title', 'objective_json', 'plan_json', 'limits_json', 'business_id', 'task_id', 'correlation_id', 'priority', 'stop_reason', 'confidence', 'confidence_score', 'result_json', 'provenance_json', 'counters_json', 'active_ms', 'cancel_requested', 'error_code', 'error_message', ...base, 'created_at', 'updated_at', 'started_at', 'completed_at'], json: ['objective', 'plan', 'limits', 'result', 'provenance', 'counters'], updatedAt: true });
+  const researchSubquestions = makeRepo(db, { table: 'research_subquestions', cols: ['run_id', 'idx', 'text', 'field', 'queries_json', 'status'], json: ['queries'] });
+  const researchSources = makeRepo(db, { table: 'research_sources', cols: ['run_id', 'url', 'canonical_url', 'final_url', 'domain', 'title', 'status', 'discovery_json', 'retrieval_json', 'content_hash', 'text', 'author', 'published_at', 'language', 'word_count', 'char_count', 'extraction_status', 'source_type', 'quality_score', 'quality_json', 'duplicate_of', 'duplicate_kind', 'retrieved_at', ...base, 'created_at'], json: ['discovery', 'retrieval', 'quality'] });
+  const researchEvidence = makeRepo(db, { table: 'research_evidence', cols: ['run_id', 'source_id', 'source_url', 'claim', 'excerpt', 'location', 'evidence_type', 'field', 'value_json', 'unit', 'observed_at', 'freshness', 'confidence', 'confidence_score', 'method', 'derived_from_json', 'subquestion_id', ...base], json: ['value', 'derived_from'] });
+  const researchConflicts = makeRepo(db, { table: 'research_conflicts', cols: ['run_id', 'field', 'description', 'claims_json', 'status', ...base], json: ['claims'] });
+  const researchFindings = makeRepo(db, { table: 'research_findings', cols: ['run_id', 'type', 'statement', 'basis', 'field', 'evidence_ids_json', 'confidence', 'confidence_score', 'rationale', 'freshness', 'conflict_ids_json', 'status', ...base], json: ['evidence_ids', 'conflict_ids'] });
+
   const requireMode = (mode) => { if (!MODES.includes(mode)) throw new RepoError('data mode (demo|test|live) is required'); return mode; };
 
   const ledgerApi = {
@@ -115,5 +122,5 @@ export function createRepos(db) {
     /** Marks earlier runs that never ended as crashed; returns how many (recovery foundation). */
     markCrashed(exceptId) { return db.run("UPDATE process_runs SET status = 'crashed' WHERE status = 'running' AND id <> ?", [exceptId]).changes; },
   };
-  return { businesses, agents, tasks, agentProgress, events, ledger: ledgerApi, approvals: approvalsApi, quests, upgrades, achievements, leaderboard, metrics, systemState, checkpoints, progression, runs };
+  return { businesses, agents, tasks, agentProgress, events, ledger: ledgerApi, approvals: approvalsApi, quests, upgrades, achievements, leaderboard, metrics, systemState, checkpoints, progression, runs, researchRuns, researchSubquestions, researchSources, researchEvidence, researchConflicts, researchFindings };
 }

@@ -37,3 +37,12 @@
 | KI-035 | An Agent OS retry of an AI task is a new paid call; there is no cross-attempt budget yet | Phase 12 |
 | KI-036 | OpenAI-compatible structured output uses `json_object` on non-OpenAI endpoints; schema is not enforced there | adapter limitation |
 | KI-037 | Freebuff is not integrated | needs a documented API |
+| KI-038 | **No live discovery provider was tested**: no keyless public search API is integrated and none is hardcoded; discovery is verified with deterministic mocks and a JSON-search double. A live *retrieval* smoke test (`https://example.com/`) succeeded through the safe retriever | configure `RESEARCH_SEARCH_URL` (e.g. SearXNG) |
+| KI-039 | Evidence extraction is rule-based (keyword-matching sentences, first number per sentence); it can miss or mis-scope claims, and units like "3.5 million USD" lose the currency | later improvement / AI assist |
+| KI-040 | Conflict detection covers numeric values with identical units only; contradictory text claims are not detected | backlog |
+| KI-041 | Pages that need JavaScript render nothing useful (limitation is recorded on the source); no PDF support | by design |
+| KI-042 | Source type is a heuristic (TLD/host shape/provider hint), so most sources are `unknown`; quality still reflects content factors | by design |
+| KI-043 | No automatic pruning of old research runs/page text | operator/Phase 24 |
+| KI-044 | Retrieval is sequential (one page at a time) | acceptable; keeps load bounded |
+| KI-045 | Near-duplicate detection uses shingle overlap only; paraphrased/syndicated rewrites are not detected | by design |
+| KI-046 | An Agent OS retry resumes a run, but a retry after a crash inside an AI call may repeat that call once (`done` flag is set after the call returns) | acceptable |

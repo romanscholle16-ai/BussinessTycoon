@@ -46,3 +46,15 @@
 | D-043 | `.env` is loaded (without overriding real env vars) for credentials; config object never contains secrets | Phase 0 `.env.example` existed but nothing read it | accepted |
 | D-044 | Credential-like key detection ignores the plural `tokens` (token counts are not secrets) | `maxTokens`/`inputTokens` are legitimate field names | accepted |
 | D-045 | Freebuff is an adapter boundary only (no invented API) | No stable programmatic API identified | accepted |
+| D-046 | Research is an Agent OS task type (`research.run`), not a second scheduler | Supervisor stays the only scheduler; reuses retries, permissions, correlation | locked |
+| D-047 | Network policy: HTTPS only, public addresses only, explicit opt-ins for loopback/private/http; DNS checked before and at connect; every redirect re-validated; reserved/metadata never allowed | SSRF protection without proxies or dependencies | locked |
+| D-048 | Raw `node:http(s)` transport with a guarded `lookup` instead of global fetch for retrieval | fetch cannot pin/validate resolved addresses at connect time | accepted |
+| D-049 | Respect robots.txt; unreachable robots = not allowed; never bypass paywall/auth/CAPTCHA | Honest, ToS-aware research | accepted |
+| D-050 | No search provider is hardcoded or enabled by default; deterministic mock providers for tests; generic JSON search adapter via `RESEARCH_SEARCH_URL` | No credentials, no fabricated sources | accepted |
+| D-051 | Evidence types split direct (fact/quoted claim) from derived/inference; direct evidence requires source+excerpt (CHECK + validation stage); AI output is a separate, low-confidence `model_inference` | AI never silently becomes sourced fact | locked |
+| D-052 | Conflicts are first-class rows; no value is chosen or aggregated over a conflicted field | Never arbitrary resolution | locked |
+| D-053 | Confidence is a level plus bounded score with explicit weights and hard caps (single source ≤ medium, conflict ≤ low) | Explainable, no fake precision | accepted |
+| D-054 | Run events use the existing append-only `events` table (`research.*`), metadata key `researchId` (not `runId`, which Phase 5 reserves for Supervisor runs) | No extra table; reuses Phase 5 queries | accepted |
+| D-055 | Run lifecycle has its own states (13) because research needs stage-level resume; terminal outcome is derived from evidence, not from task success | Resumable and honest outcomes | accepted |
+| D-056 | Page text is stored bounded and extracted only (default 20 000 chars), never exposed through the API | Retention and exposure minimization | accepted |
+| D-057 | Phase 3 capability test updated: `source_retrieval` is the second enabled external capability (network read) | Needed for safe retrieval gating | accepted |

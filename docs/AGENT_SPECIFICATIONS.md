@@ -125,3 +125,10 @@ Approvals/human control (Phase 20), budgets in money (Phase 12), ROI-based alloc
 ---
 # Phase 6 addition: AI capability and task type
 Capability `ai` (enabled, external): required by handler `ai.complete`, which calls the AI service (`server/src/ai/handlers.js`). Payload: `prompt` (required), `system`, `maxTokens`, `temperature`, `jsonSchema`, `provider`, `model`, `allowFallback`, `maxCostUsd`, `purpose`. Result: `output`, `structured`, `provider`, `model`, `finishReason`, `usage`, `cost`, `attempts`, `latencyMs` (no prompt is stored). Failure mapping and retry rules: ARCHITECTURE.md → AI providers. Demo agents never hold `ai`. Real business AI workflows arrive in Phases 7–11.
+
+
+# Phase 7 addition: research capabilities, task type and agent
+- Capabilities (enabled): `source_discovery` (internal, asks configured discovery providers), `source_retrieval` (**external**: network read through the safe retriever), `evidence_analysis` (internal). `research`, `analyze`, `ai` as before. Publish/spend/communicate stay disabled.
+- Task type `research.run` (payload `{runId}`; handler capability `research`). The engine additionally calls `assertCan` for `source_discovery` before discovery, `source_retrieval` before retrieval, `evidence_analysis` before analysis and `ai` before any model call (a missing `ai` capability skips AI inference, the others fail the run with `permission_denied`, non-retryable; work already stored is kept).
+- Agent `research-engine` (role Research, shared, businesses `*`, capabilities research/source_discovery/source_retrieval/evidence_analysis/analyze/ai, one task at a time, 30 min task limit) is registered at server start (not demo data). Tasks are created with `maxRetries 2`, timeout `maxTimeMs + 2 min`, `correlationId = run id`, and are scheduled by the Supervisor with the normal priority/aging rules.
+- Failure semantics: interruption → retryable `research_interrupted` (run resumes); run `failed` → non-retryable `research_<code>`; a failing discovery provider is never retried more than twice per run.

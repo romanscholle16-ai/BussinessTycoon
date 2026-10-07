@@ -84,3 +84,53 @@ Process logs are one JSON object per line on stdout/stderr (`ts, level, componen
 - **Agent OS integration:** `ai.complete` task type, handler capability `ai` (enabled, external; **never granted to demo agents**). Failures map to `TaskError('ai_<category>')`: `rate_limit/timeout/unavailable/provider_error/malformed_response` are retryable (existing bounded Agent OS/Supervisor retry rules apply and each retry is a new, separately costed call); `disabled/configuration/authentication/authorization/invalid_request/safety_refusal/budget_exceeded` are not. No output is ever faked.
 - **Observability:** per call exactly one `ai.completed`/`ai.failed` event (provider, model, attempts summary, retries, fallbacks, latency, token counts, `costUsd`/`costBasis`, finish reason, prompt/output *sizes* only), an `ai.fallback` event per provider switch, and an `ai.provider_state` event when a provider enters or leaves a problem state; linked to task/agent/business (and correlation via the task). Mock-provider events are flagged `test`. Prompts, outputs and credentials are never stored. A disabled AI layer writes no events (the failing task already says why).
 - **Freebuff:** an adapter boundary only. No stable programmatic provider API is available in this environment, so nothing was invented: it reports `not integrated`, cannot be selected, and the architecture does not depend on it.
+
+## Research Engine (Phase 7) — `server/src/research/`
+Business-independent, autonomous but bounded research infrastructure. Pipeline: **Objective → Plan → Discover → Retrieve → Normalize → Evaluate → Extract Evidence → Analyze → Synthesize → Validate → Persist → Explain.** It is not a second Supervisor: a research run is an Agent OS task (`research.run`, capability `research`) that the Supervisor schedules like any other work; the engine only executes the run it is handed.
+
+| Module | Role |
+|---|---|
+| `model.js` | Objective validation (strict, bounded, no secrets), limits, run states, deterministic planner (`buildPlan`) |
+| `urlsafe.js` | URL validation, IP classification, explicit network (SSRF) policy, canonicalization |
+| `html.js` | HTML → text without executing anything (scripts/styles/comments dropped, entities decoded, bounded) |
+| `retrieval.js` | Safe retriever (policy, DNS pre-check + connect-time DNS guard, manual redirects, size/time limits, content-type allowlist, robots.txt), node transport, normalization |
+| `discovery.js` | Provider-independent discovery: normalization, deterministic mock discovery/retrieval providers, generic JSON search adapter (operator endpoint, no key) |
+| `quality.js` | Explainable per-factor source quality (no popularity lists) |
+| `evidence.js` | Evidence extraction, field confidence (explicit weights, hard caps), numeric conflict detection, deduplication |
+| `analysis.js` | Deterministic aggregation/gap/trend/contradiction findings; validation of model-produced inferences |
+| `engine.js` | Persisted, resumable state machine + observability events + optional bounded AI inference |
+| `service.js` | Run creation (Agent OS task), reads for the API, cancel, reconcile, provider wiring, `research.run` handler, the `research-engine` agent definition |
+
+### Objective model
+`title, question, purpose, scope, requiredInformation[{field, description, valueType number|text|boolean, unit, findingType}], constraints, freshness{maxAgeDays}, market{geography, market, language}, sourcePreferences{types, preferDomains, avoidDomains}, limits, priority, businessId, context{taskId, agentId, correlationId}`. Limits (all bounded, defaults in `LIMIT_DEFAULTS`): `maxSources 10, maxRetrievals 10, maxQueries 6, maxAiCalls 0, maxTimeMs 120000, maxTextChars 20000, maxEvidencePerSource 3, minIndependentSources 2, noNewEvidenceStop 3, confidenceTarget medium, conflictTolerance 0.25, maxCostUsd 0`. Without `requiredInformation` the question itself is one implicit field (`answer`).
+
+### Plan
+Deterministic, bounded: subquestions (one per required field), search queries (≤ `maxQueries` in total), source types, expected evidence, stopping conditions, limits, and the possible outcomes (sufficient / insufficient / conflicting / no useful sources / budget-or-time limit). Stored in `research_runs.plan_json` + `research_subquestions`.
+
+### Run lifecycle (persistent, resumable)
+States: `created → planning → discovering → retrieving → evaluating → analyzing → synthesizing → validating → completed | insufficient | conflicted | failed | cancelled`. Every stage is idempotent; progress (sources, evidence, counters, accumulated active time, provider provenance) is committed continuously, so a restart or Agent OS retry resumes from the saved stage and never re-fetches finished sources. The task handler throws a *retryable* `research_interrupted` only for interruptions (timeout/shutdown); a failed run (no provider, permission denied, validation failure) is terminal and non-retryable. Boot `reconcile()` fails/cancels runs whose Agent OS task already ended.
+Outcome rule: `completed` = every required field is supported by direct evidence, at/above the confidence target, from ≥ `minIndependentSources` independent domains, with no unresolved conflict; `conflicted` = a required field has an unresolved conflict; otherwise `insufficient`; `failed` only for provider/permission/integrity failure.
+
+### Discovery & provider selection
+Providers implement `discover({query, limit, signal})`; results are normalized (query, title, URL, domain, snippet, rank, provider, discoveredAt), URL-policy-validated and de-duplicated. Providers are tried **in configured order**; a provider that fails twice in a run is not asked again; fallback happens only to providers explicitly configured in the list; attempts, failures and fallback counts are stored in `research_runs.provenance_json` and in events. If nothing is configured or all fail, the run ends `failed` (`provider_unavailable`) — nothing is fabricated. No commercial provider is built in; `RESEARCH_SEARCH_URL` configures the generic JSON adapter (SearXNG-style `?q=&format=json`, no credentials).
+
+### Retrieval, normalization, quality
+See SECURITY_SPECIFICATION (network policy). Normalized source: canonical URL, domain, title, author/publication date/language **only if present in the page** (else null), retrieved date, bounded text, content type/length, provider, content hash, word/char counts, extraction status, limitations. Quality score = weighted sum of nine factors (directness, relevance, freshness, specificity, completeness, extraction quality, publication info, corroboration, consistency), each stored with its reason; source type is a heuristic (provider hint, `.gov`/`.edu` TLD, host shape) and defaults to `unknown`; corroboration/consistency are neutral until the evaluation pass.
+
+### Evidence & traceability
+`research_evidence` rows: claim, bounded excerpt (≤300 chars), location (`sentence N`), type, field, value/unit, observed time, freshness, confidence, method, research ID. Types: `directly_observed_fact`, `quoted_source_claim` (the only two that are direct source evidence — `source_id`, URL and excerpt are mandatory, enforced by a CHECK constraint and by the validation stage), `derived_calculation` (no source; `derived_from` lists input evidence ids), `model_inference`, `hypothesis`. Chains: Conclusion → Evidence → Source → URL; Conclusion → Calculation → Evidence → Source; Conclusion → AI inference → supporting evidence. A finding with basis `sourced` must cite direct evidence; model inferences are always `basis=model_inference`, confidence capped at `low`, never merged into sourced facts.
+
+### Conflicts, deduplication, confidence
+Numeric evidence of one field (same unit, ≥2 distinct sources) is clustered by relative tolerance; >1 cluster is stored as an explicit `research_conflicts` row (claims with quality/freshness/confidence) with status `unresolved` — no value is chosen and no aggregate is computed over a conflicted field. Deduplication: exact URL, canonical URL, identical content hash, near-duplicate copy (4-word shingle Jaccard ≥ 0.85); duplicates are kept (status `duplicate`, `duplicate_of`) but never count as independent sources. Confidence is `high/medium/low/insufficient` plus a bounded score from: source quality 0.30, independent domains 0.25, agreement 0.20, freshness 0.10, directness 0.10, completeness 0.05; hard caps: one independent source → at most `medium`; unresolved conflict → at most `low`; no direct evidence → `insufficient`. Reasons are stored with each finding.
+
+### Findings
+Generic types `opportunity, trend, gap, risk, constraint, recommendation, unanswered_question`. Deterministic engine produces: per-field answer (type from the field's `findingType`, default `constraint`), `unanswered_question`, `gap` (too few independent sources), `trend` (two dated sources, always tentative/low). Findings never trigger business actions.
+
+### Stopping conditions
+Required fields supported at the confidence target (`required_fields_supported` / `confidence_target_reached`), `max_sources`, `max_retrievals`, `max_ai_calls`, `time_budget` (accumulated active time, survives restarts), `no_new_evidence` (consecutive successful but barren retrievals), `subquestions_exhausted`, `no_useful_sources`, `provider_unavailable`, `cancelled`, `permission_denied`, `error`. The reason is stored on the run and emitted as `research.stopped`.
+
+### AI integration
+Only through the Phase 6 `ai.complete` service, only when `limits.maxAiCalls > 0`, the AI service is enabled and the agent holds capability `ai`. One bounded call (≤12 000 prompt chars, 800 output tokens, temperature 0, JSON schema) proposes ≤5 inferences over ≤20 evidence excerpts (marked UNTRUSTED DATA in the prompt). Output is validated (evidence ids must exist, type/length/confidence bounds); rejected items are counted; failure or malformed output leaves deterministic results intact. Provider, model, usage cost and correlation context are recorded in `provenance_json` and the AI events.
+
+### Observability events (component `research`)
+`research.run_started|run_resumed|stage|source_discovered|discovery_completed|provider_unavailable|retrieval_failed|source_duplicate|evidence_extracted|confidence_reached|conflict_detected|analysis_completed|ai_inference|ai_failed|ai_skipped|stopped|run_completed|run_insufficient|run_conflicted|run_failed|run_cancelled`. Metadata carries `researchId`, counts, domains and query-less URLs only — never page text, prompts, outputs or secrets. Correlation uses the task's `correlation_id` (= run id by default).

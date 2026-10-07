@@ -4,6 +4,9 @@ import { ValidationError } from './validate.js';
 
 export const CAPABILITIES = {
   research:    { enabled: true,  external: false, description: 'gather and score information (internal data only in Phase 3)' },
+  source_discovery: { enabled: true, external: false, description: 'ask configured discovery providers for candidate sources (no page access)' },
+  source_retrieval: { enabled: true, external: true,  description: 'fetch public web pages through the safe retriever (HTTPS, SSRF policy, bounded, robots-aware); no auth, no publishing' },
+  evidence_analysis: { enabled: true, external: false, description: 'extract and analyze evidence from stored sources' },
   analyze:     { enabled: true,  external: false, description: 'analyze stored data' },
   generate:    { enabled: true,  external: false, description: 'create content/assets (deterministic stubs only in Phase 3)' },
   ai:          { enabled: true,  external: true,  description: 'call the configured AI providers through the AI service (never granted to demo agents; providers are disabled unless configured)' },

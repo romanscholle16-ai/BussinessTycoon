@@ -58,3 +58,17 @@ Responses are sanitized: credential-like keys redacted, file paths and stack tra
 ## Phase 6 additions (AI providers)
 `GET /api/ai/providers[?refresh=1]` → `{ok, timestamp, data:{enabled, activeProvider, fallbackProviders, selection, problems[], limits{timeoutMs,maxRetries,maxTotalMs,maxProviderAttempts,maxInputChars,defaultMaxOutputTokens,maxOutputTokens,maxCostPerRequestUsd}, providers:[{name, kind, role(active|fallback|unused), enabled, configured, status, reason, model, models[], capabilities{text,json,temperature}, endpoint(origin only), integration, rateLimitedUntil, retryAt, lastOkAt, lastError{category,at}, stats{requests,ok,failed,avgLatencyMs}, pricing{known,inputPerMTokUsd,outputPerMTokUsd}}]}, meta}`. `refresh=1` runs the bounded local-server probe (Ollama) — the only live check; unknown or repeated parameters → 400; non-GET → 405; no service → 503. Never returns keys, headers, prompts, paths or URLs with credentials. There are no mutation endpoints: configuration comes from `config/` and the environment.
 `/api/health` reports `phase: 6`.
+
+## Phase 7 additions (Research Engine)
+All responses use the Phase 5/6 envelope `{ok, timestamp, data, meta:{phase}}`; errors `{ok:false, error, message}` with 400 `validation`, 404 `not_found`, 405 `method_not_allowed`, 409 `conflict`, 503 `research_unavailable`. Unknown/duplicate query parameters are rejected; ids are validated; all SQL is parameterized; `Cache-Control: no-store`.
+| Method & path | Purpose |
+|---|---|
+| `POST /api/research/runs` | Create a run from an objective (JSON ≤ 32 KB, strict schema) and submit the Agent OS task. 201 `{run}` |
+| `GET /api/research/runs?status=&limit=&offset=` | List runs (limit 1–100, default 25), newest first, with counts/progress/confidence/stop reason/provider+AI summary |
+| `GET /api/research/runs/:id` | One run with objective, plan, result (explanation) and limits |
+| `GET /api/research/runs/:id/sources?status=&limit=&offset=` | Sources with quality factors, provenance, retrieval status (never page text) |
+| `GET /api/research/runs/:id/evidence?type=&field=&limit=&offset=` | Evidence items with type, excerpt, provenance, `directSourceEvidence`, `derivedFrom` |
+| `GET /api/research/runs/:id/findings?type=&limit=&offset=` | Findings + explicit conflicts |
+| `POST /api/research/runs/:id/cancel` | Cancel a non-terminal run (409 when already terminal) |
+| `GET /api/research/status` | Providers (ids/kinds only), network policy flags, config problems |
+There is **no endpoint that fetches an arbitrary URL**; URLs are never accepted as input (the objective schema has no URL field). Pages are fetched only by the engine for discovered sources through the validated retriever.

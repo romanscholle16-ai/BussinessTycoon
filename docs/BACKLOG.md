@@ -41,3 +41,8 @@
 - Cross-task AI budget windows and approval flow (Phases 12, 20)
 - Freebuff adapter if a stable programmatic interface appears
 - Optional SDK-backed Claude adapter
+- Research: PDF/document support, sitemap/RSS discovery, per-domain rate limiting and concurrency, retrieval caching across runs
+- Research: text-claim contradiction detection, entity/unit normalization (currencies, ranges), better table extraction
+- Research: AI-assisted query planning and claim extraction (bounded, validated), semantic dedup
+- Research: run pruning/retention policy and export (Phase 24), richer research UI (drill-down into sources/evidence) in later UI phases
+- Research: cross-run evidence reuse and freshness-based re-research (Phase 15/25)
